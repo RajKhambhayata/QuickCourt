@@ -1,0 +1,333 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite connector compatibility: string fields with standard defaults
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  role         String     @default("USER") // USER, OWNER, ADMIN
+  avatar       String?
+  phone        String?
+  status       String     @default("ACTIVE") // ACTIVE, BANNED, PENDING_APPROVAL, REJECTED
+  isVerified   Boolean    @default(true)
+  otpCode      String?    // HMAC hash; the raw OTP is never persisted
+  otpExpiresAt DateTime?
+  otpAttempts  Int        @default(0)
+  otpLastSentAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  facilities   Facility[]
+  bookings     Booking[]
+  reviews      Review[]
+  reports      Report[]
+
+  // Engagement & Rewards relations
+  wallet         Wallet?
+  coinLedgers    CoinLedger[]
+  streakProgress StreakProgress?
+  coupons        Coupon[]
+  gameSessions   GameSession[]
+  standings      Standing[]
+  lapRecords     LapRecord[]
+  waitlists      Waitlist[]
+  auditLogs      AuditLog[]
+}
+
+model Facility {
+  id              String         @id @default(cuid())
+  name            String
+  description     String
+  address         String
+  city            String
+  state           String?        @default("Karnataka")
+  pincode         String?
+  images          String         // JSON string array of image URLs
+  sports          String         // JSON string array of sport names
+  amenities       String         // JSON string array of amenities
+  venueType       String         @default("Indoor & Outdoor")
+  status          String         @default("APPROVED") // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  ownerId         String
+  owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  courts          Court[]
+  reviews         Review[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Court {
+  id                 String        @id @default(cuid())
+  facilityId         String
+  facility           Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  name               String
+  sportType          String        // Badminton, Box Cricket, Tennis, Pickleball, Football, Basketball, Karting
+  surfaceType        String?       @default("Synthetic")
+  pricePerHour       Float
+  operatingStartHour Int           @default(6) // 06:00
+  operatingEndHour   Int           @default(23) // 23:00
+  isActive           Boolean       @default(true)
+  bookings           Booking[]
+  blockedSlots       BlockedSlot[]
+  kartHeats          KartHeat[]
+  waitlists          Waitlist[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model BlockedSlot {
+  id        String   @id @default(cuid())
+  courtId   String
+  court     Court    @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  startTime String   // "09:00"
+  endTime   String   // "10:00"
+  reason    String   @default("Maintenance")
+  createdAt DateTime @default(now())
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  bookingNumber      String        @unique
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courtId            String
+  court              Court         @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  date               String        // YYYY-MM-DD
+  startTime          String        // "18:00"
+  endTime            String        // "19:00"
+  totalAmount        Float
+  status             String        @default("PENDING_PAYMENT") // PENDING_PAYMENT, CONFIRMED, CANCELLED, COMPLETED
+  paymentMethod      String        @default("UPI")
+  paymentStatus      String        @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  paymentProviderId  String?       // ID from payment gateway (Stripe, Razorpay, etc.)
+  cancellationReason String?
+  
+  // Engagement & Rewards tracking
+  gameTokenUsed      Boolean       @default(false)
+  gameSessions       GameSession[]
+  appliedCouponId    String?
+  couponDiscount     Float?        @default(0)
+  coinsRedeemed      Int?          @default(0)
+  coinsDiscount      Float?        @default(0)
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  facilityId String
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating     Int      @default(5)
+  comment    String
+  createdAt  DateTime @default(now())
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reportedById String
+  reportedBy   User         @relation(fields: [reportedById], references: [id], onDelete: Cascade)
+  targetType   String       // FACILITY, USER
+  targetId     String
+  targetName   String
+  reason       String
+  status       String       @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  adminNote    String?
+  createdAt    DateTime     @default(now())
+}
+
+// -------------------------------------------------------------
+// Engagement, Loyalty & Rewards Models
+// -------------------------------------------------------------
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coins     Int      @default(0)
+  credit    Float    @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model CoinLedger {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String    // EARN, SPEND, EXPIRE, BONUS
+  amount      Int
+  bookingId   String?
+  description String?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model StreakProgress {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  windowStart  DateTime @default(now())
+  count        Int      @default(0) // target: 5 bookings inside 60 days -> 20% off
+  rewardIssued Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+}
+
+model Coupon {
+  id              String         @id @default(cuid())
+  code            String         @unique
+  title           String
+  description     String?
+  type            String         // PERCENTAGE, FIXED, FOOD_ITEM
+  value           Float          // e.g. 20 (for 20%), 100 (for ₹100)
+  ownerType       String         @default("SYSTEM") // SYSTEM, OWNER, PARTNER
+  partnerId       String?
+  partnerOutlet   PartnerOutlet? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  minBookingValue Float?         @default(0)
+  maxDiscount     Float?
+  expiresAt       DateTime
+  status          String         @default("ACTIVE") // ACTIVE, USED, EXPIRED
+  usedAt          DateTime?
+  gameSessionId   String?
+  redemptions     Redemption[]
+  createdAt       DateTime       @default(now())
+}
+
+model GameSession {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingId  String?
+  booking    Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  gameType   String    @default("SMASH_RALLY") // SMASH_RALLY, SPIN_WHEEL, SCRATCH_CARD, TRIVIA
+  score      Int       @default(0)
+  tier       String?
+  tapLog     String?   // JSON array of taps for anti-cheat verification
+  isVerified Boolean   @default(false)
+  couponId   String?
+  startedAt  DateTime  @default(now())
+  endedAt    DateTime?
+}
+
+model PartnerOutlet {
+  id          String       @id @default(cuid())
+  name        String
+  category    String       @default("Food Court") // Cafe, Food Court, Juice Bar, Sports Nutrition
+  address     String
+  city        String
+  phone       String?
+  image       String?
+  menuItems   String       // JSON string array of items
+  offerRules  String       // JSON string of conditions
+  active      Boolean      @default(true)
+  coupons     Coupon[]
+  redemptions Redemption[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Redemption {
+  id         String        @id @default(cuid())
+  couponId   String
+  coupon     Coupon        @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  outletId   String
+  outlet     PartnerOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  staffId    String?
+  staffName  String?
+  redeemedAt DateTime      @default(now())
+}
+
+model Season {
+  id         String     @id @default(cuid())
+  name       String
+  sport      String     @default("KARTING")
+  startDate  DateTime
+  endDate    DateTime?
+  rounds     String     // JSON array of rounds
+  pointsRule String     @default("F1") // F1: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1
+  status     String     @default("ACTIVE") // UPCOMING, ACTIVE, COMPLETED
+  standings  Standing[]
+  createdAt  DateTime   @default(now())
+}
+
+model Standing {
+  id          String   @id @default(cuid())
+  seasonId    String
+  season      Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  playerId    String?
+  player      User?    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamName    String?
+  points      Int      @default(0)
+  podiums     Int      @default(0)
+  fastestLaps Int      @default(0)
+  rank        Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model KartHeat {
+  id           String      @id @default(cuid())
+  courtId      String?
+  court        Court?      @relation(fields: [courtId], references: [id], onDelete: SetNull)
+  trackName    String
+  date         String      // YYYY-MM-DD
+  startTime    String      // "18:00"
+  endTime      String      // "18:15"
+  capacity     Int         @default(10)
+  seatsTaken   Int         @default(0)
+  kartClass    String      @default("ADULT") // JUNIOR, ADULT, PRO
+  pricePerSeat Float       @default(650)
+  status       String      @default("OPEN") // OPEN, FULL, COMPLETED
+  lapRecords   LapRecord[]
+  createdAt    DateTime    @default(now())
+}
+
+model LapRecord {
+  id        String   @id @default(cuid())
+  heatId    String
+  heat      KartHeat @relation(fields: [heatId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lapNo     Int
+  timeMs    Int      // e.g. 34520 = 34.520s
+  isBest    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id         String    @id @default(cuid())
+  courtId    String
+  court      Court     @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  date       String
+  startTime  String
+  endTime    String
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     String    @default("WAITING") // WAITING, NOTIFIED, CLAIMED, EXPIRED
+  notifiedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String   // e.g. "APPROVE_OWNER", "REJECT_OWNER", "FACILITY_CREATE", "COURT_CREATE", "SLOT_BLOCK"
+  resource   String   // e.g. "USER", "FACILITY", "COURT", "BOOKING", "BLOCKED_SLOT"
+  resourceId String?
+  details    String?  // JSON serialized extra metadata or description
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}

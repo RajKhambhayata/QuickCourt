@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -28,6 +30,7 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Please login to check daily spin' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     // Check last spin session in past 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -61,6 +64,7 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: 'Please login to spin the wheel' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     // Verify 24hr cooldown
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

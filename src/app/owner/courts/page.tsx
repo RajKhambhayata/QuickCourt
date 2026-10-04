@@ -104,9 +104,9 @@ export default function CourtManagementPage() {
             name,
             sportType,
             surfaceType,
-            pricePerHour,
-            operatingStartHour,
-            operatingEndHour,
+            pricePerHour: Number(pricePerHour),
+            operatingStartHour: Number(operatingStartHour),
+            operatingEndHour: Number(operatingEndHour),
             isActive,
           }),
         });
@@ -124,9 +124,9 @@ export default function CourtManagementPage() {
             name,
             sportType,
             surfaceType,
-            pricePerHour,
-            operatingStartHour,
-            operatingEndHour,
+            pricePerHour: Number(pricePerHour),
+            operatingStartHour: Number(operatingStartHour),
+            operatingEndHour: Number(operatingEndHour),
           }),
         });
         if (res.ok) {

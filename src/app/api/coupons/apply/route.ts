@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -9,6 +11,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Please login to apply coupons' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     const body = await req.json();
     const { code, bookingAmount = 0, useCoins = false } = body;

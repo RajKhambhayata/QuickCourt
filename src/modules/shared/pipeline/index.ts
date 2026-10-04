@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { UserSession } from '@/lib/types';
 import { Prisma } from '@prisma/client';
+import { revalidateAvailability, revalidateBookings, revalidateVenues, revalidateVenue } from '@/lib/cache';
 
 export type UserRole = 'ADMIN' | 'OWNER' | 'USER';
 
@@ -42,6 +43,9 @@ export interface PipelineOptions<TBody = any, TParams = any, TResult = any> {
     resourceId?: string;
     details?: any;
   } | null);
+
+  // 7. Cache Invalidation (automatic based on resource type)
+  invalidateCache?: boolean;
 
   // Core business logic handler
   handler: (ctx: PipelineContext<TBody, TParams>) => Promise<NextResponse | TResult>;
@@ -296,6 +300,42 @@ export function createApiPipeline<TBody = any, TParams = any, TResult = any>(
       const result = options.transactional !== false
         ? await runTransaction(executeWithTx)
         : await executeWithTx(prisma as unknown as Prisma.TransactionClient);
+
+      // Stage 7: Cache Invalidation
+      if (options.invalidateCache !== false) {
+        // Invalidate based on action/resource
+        if (typeof options.audit === 'object' || typeof options.audit === 'function') {
+          const auditData = typeof options.audit === 'function'
+            ? options.audit({ user: user as UserSession, body: parsedBody, result })
+            : options.audit;
+
+          if (auditData) {
+            const resource = auditData.resource;
+            const resourceId = typeof auditData.resourceId === 'function'
+              ? auditData.resourceId({ user: user as UserSession, body: parsedBody, result })
+              : auditData.resourceId;
+
+            switch (resource) {
+              case 'BOOKING':
+                revalidateAvailability();
+                revalidateBookings();
+                break;
+              case 'FACILITY':
+                if (resourceId) {
+                  revalidateVenue(resourceId);
+                }
+                revalidateVenues();
+                break;
+              case 'COURT':
+                revalidateAvailability();
+                break;
+              case 'BLOCKED_SLOT':
+                revalidateAvailability();
+                break;
+            }
+          }
+        }
+      }
 
       if (result instanceof NextResponse) {
         return result;

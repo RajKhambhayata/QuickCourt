@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -9,14 +11,67 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
-    // 1. Get or create Wallet
-    let wallet = await prisma.wallet.findUnique({
-      where: { userId: user.id },
-    });
+    const now = new Date();
+
+    // Parallelize all independent queries
+    const [wallet, streak, existingWelcome, activeCoupons, completedBookingsCount, unplayedTokensCount, ledger] = await Promise.all([
+      // 1. Get or create Wallet
+      prisma.wallet.findUnique({
+        where: { userId: user.id },
+      }),
+      // 2. Get or create StreakProgress
+      prisma.streakProgress.findUnique({
+        where: { userId: user.id },
+      }),
+      // 3. Check if Welcome Coupon exists
+      prisma.coupon.findFirst({
+        where: { userId: user.id, code: { startsWith: 'WELCOME' } },
+      }),
+      // 4. Fetch Active Coupons
+      prisma.coupon.findMany({
+        where: {
+          userId: user.id,
+          status: 'ACTIVE',
+          expiresAt: { gt: now },
+        },
+        include: {
+          partnerOutlet: {
+            select: { name: true, category: true, address: true, city: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      // 5. Completed bookings count for player tier
+      prisma.booking.count({
+        where: {
+          userId: user.id,
+          status: { in: ['CONFIRMED', 'COMPLETED'] },
+        },
+      }),
+      // 6. Game tokens available (unplayed sessions)
+      prisma.gameSession.count({
+        where: {
+          userId: user.id,
+          isVerified: false,
+          score: 0,
+        },
+      }),
+      // 7. Recent Coin Ledger
+      prisma.coinLedger.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    // Create wallet if doesn't exist
+    let finalWallet = wallet;
     if (!wallet) {
-      wallet = await prisma.wallet.create({
-        data: { userId: user.id, coins: 50, credit: 0 }, // give initial 50 coins welcome bonus
+      finalWallet = await prisma.wallet.create({
+        data: { userId: user.id, coins: 50, credit: 0 },
       });
       // record welcome bonus
       await prisma.coinLedger.create({
@@ -29,26 +84,24 @@ export async function GET() {
       });
     }
 
-    // 2. Get or create StreakProgress
-    let streak = await prisma.streakProgress.findUnique({
-      where: { userId: user.id },
-    });
+    // Create streak if doesn't exist
+    let finalStreak = streak;
     if (!streak) {
-      streak = await prisma.streakProgress.create({
+      finalStreak = await prisma.streakProgress.create({
         data: { userId: user.id, count: 0, rewardIssued: false },
       });
     }
 
+    if (!finalWallet || !finalStreak) {
+      throw new Error('Failed to initialize wallet or streak');
+    }
+
     // Check 60-day window
-    const now = new Date();
-    const windowStartMs = new Date(streak.windowStart).getTime();
+    const windowStartMs = new Date(finalStreak.windowStart).getTime();
     const daysSinceStart = Math.floor((now.getTime() - windowStartMs) / (1000 * 60 * 60 * 24));
     const daysRemaining = Math.max(0, 60 - daysSinceStart);
 
-    // 3. Ensure Welcome Coupon exists (Feature 1.5)
-    const existingWelcome = await prisma.coupon.findFirst({
-      where: { userId: user.id, code: { startsWith: 'WELCOME' } },
-    });
+    // Create welcome coupon if doesn't exist
     if (!existingWelcome) {
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 30);
@@ -69,59 +122,20 @@ export async function GET() {
       });
     }
 
-    // 4. Fetch Active Coupons
-    const activeCoupons = await prisma.coupon.findMany({
-      where: {
-        userId: user.id,
-        status: 'ACTIVE',
-        expiresAt: { gt: now },
-      },
-      include: {
-        partnerOutlet: {
-          select: { name: true, category: true, address: true, city: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // 5. Completed bookings count for player tier
-    const completedBookingsCount = await prisma.booking.count({
-      where: {
-        userId: user.id,
-        status: { in: ['CONFIRMED', 'COMPLETED'] },
-      },
-    });
-
     const tierInfo = calculatePlayerTier(completedBookingsCount);
-
-    // 6. Game tokens available (unplayed sessions)
-    const unplayedTokensCount = await prisma.gameSession.count({
-      where: {
-        userId: user.id,
-        isVerified: false,
-        score: 0,
-      },
-    });
-
-    // 7. Recent Coin Ledger
-    const ledger = await prisma.coinLedger.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    });
 
     return NextResponse.json({
       success: true,
       wallet: {
-        coins: wallet.coins,
-        credit: wallet.credit,
+        coins: finalWallet.coins,
+        credit: finalWallet.credit,
       },
       streak: {
-        count: streak.count,
+        count: finalStreak.count,
         target: 5,
         daysRemaining,
-        rewardIssued: streak.rewardIssued,
-        windowStart: streak.windowStart,
+        rewardIssued: finalStreak.rewardIssued,
+        windowStart: finalStreak.windowStart,
       },
       playerTier: tierInfo,
       completedBookingsCount,

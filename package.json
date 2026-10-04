@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/start-dev.js",
+    "dev:clean": "node -e \"console.log('\\n========================================\\n  QuickCourt Development Server\\n========================================\\n\\n  Portal Access Links:\\n\\n  [ADMIN]   http://localhost:3000/admin/login\\n  [OWNER]   http://localhost:3000/owner/login\\n  [PLAYER]  http://localhost:3000/player/login\\n\\n========================================\\n  Starting server...\\n========================================\\n');\" && next dev",
     "dev:player": "node scripts/open-portal.js /player/signup",
     "dev:player:login": "node scripts/open-portal.js /player/login",
     "dev:owner": "node scripts/open-portal.js /owner/signup",
@@ -27,6 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.460.0",
     "next": "^14.2.18",
+    "pg": "^8.23.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.13.3",

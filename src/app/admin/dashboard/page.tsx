@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
 import {
   BookingTrendsChart,
@@ -19,20 +20,30 @@ import {
   Sparkles,
   DollarSign,
 } from 'lucide-react';
+import { useAuth, requireRole } from '@/lib/useAuth';
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/stats')
-      .then((res) => res.json())
-      .then((d) => setData(d))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!loading && !requireRole(user, ['ADMIN'])) {
+      router.push('/admin/login');
+      return;
+    }
 
-  if (loading) {
+    if (user && requireRole(user, ['ADMIN'])) {
+      fetch('/api/admin/stats')
+        .then((res) => res.json())
+        .then((d) => setData(d))
+        .catch((err) => console.error(err))
+        .finally(() => setDataLoading(false));
+    }
+  }, [user, loading, router]);
+
+  if (loading || dataLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10 flex flex-col md:flex-row gap-8">
         <AdminSidebar />

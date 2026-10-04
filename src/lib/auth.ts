@@ -19,21 +19,22 @@ export async function comparePassword(password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(user: { id: string; email: string; role: string }): string {
+export function signToken(user: { id: string; email: string; role: string; status: string }): string {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
       role: user.role,
+      status: user.status,
     },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
 }
 
-export function verifyToken(token: string): { id: string; email: string; role: string } | null {
+export function verifyToken(token: string): { id: string; email: string; role: string; status?: string } | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: string; status?: string };
     return decoded;
   } catch {
     return null;
@@ -64,8 +65,7 @@ export async function getCurrentUser(): Promise<UserSession | null> {
       },
     });
 
-    if (!user || user.status === 'BANNED' || !user.isVerified) return null;
-    // Note: PENDING_APPROVAL owners are allowed through so they can see their dashboard status
+    if (!user || user.status === 'BANNED' || user.status === 'REJECTED' || !user.isVerified || user.role !== decoded.role) return null;
 
     return user as UserSession;
   } catch (error) {

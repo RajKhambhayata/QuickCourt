@@ -2,20 +2,19 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { requireRole } from '@/lib/require-role';
 import { createApiPipeline } from '@/modules/shared/pipeline';
 import { CreateFacilitySchema, VenuesService } from '@/modules/core';
 
 // GET /api/owner/facilities — returns all facilities for the logged-in owner
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-    if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Unauthorized. Owner role required.' }, { status: 403 });
-    }
+    const guard = await requireRole(['OWNER']);
+    if (guard.error) return guard.error;
+    const user = guard.user;
 
     const facilities = await prisma.facility.findMany({
-      where: user.role === 'ADMIN' ? {} : { ownerId: user.id },
+      where: { ownerId: user.id },
       include: {
         courts: { orderBy: { name: 'asc' } },
         reviews: {
@@ -48,7 +47,7 @@ export async function GET() {
 
 // POST /api/owner/facilities — creates a new facility via Shared Pipeline
 export const POST = createApiPipeline({
-  roles: ['OWNER', 'ADMIN'],
+  roles: ['OWNER'],
   allowPendingOwner: false, // Rule: Admin must approve before owner can publish venues
   schema: CreateFacilitySchema,
   transactional: true,

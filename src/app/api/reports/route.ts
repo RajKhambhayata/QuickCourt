@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Please login to submit a report' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     const { targetType, targetId, targetName, reason } = await request.json();
 

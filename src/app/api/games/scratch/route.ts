@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -27,6 +29,7 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Please login to view scratch cards' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     // Check completed/confirmed bookings count vs already scratched cards
     const bookingsCount = await prisma.booking.count({
@@ -65,6 +68,7 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: 'Please login to reveal scratch card' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     const bookingsCount = await prisma.booking.count({
       where: {

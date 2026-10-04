@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -84,6 +86,7 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Please login to play Trivia' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     // Check if played in last 24h
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -129,6 +132,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Please login to submit trivia' }, { status: 401 });
     }
+    if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
     const body = await req.json();
     const { answers } = body; // Array of { questionId: string, selectedIndex: number }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import OwnerSidebar from '@/components/OwnerSidebar';
 import { SPORTS_LIST, AMENITIES_LIST, CITIES_LIST } from '@/lib/constants';
 import {
@@ -14,12 +15,15 @@ import {
   Sparkles,
   PlusCircle,
 } from 'lucide-react';
+import { useAuth, requireRole } from '@/lib/useAuth';
 
 export default function FacilityManagementPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [facilities, setFacilities] = useState<any[]>([]);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -59,7 +63,7 @@ export default function FacilityManagementPage() {
         }
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => setFacilitiesLoading(false));
   };
 
   const resetForm = () => {
@@ -85,8 +89,15 @@ export default function FacilityManagementPage() {
   };
 
   useEffect(() => {
-    fetchFacilities();
-  }, []);
+    if (!loading && !requireRole(user, ['OWNER', 'ADMIN'])) {
+      router.push('/unauthorized');
+      return;
+    }
+
+    if (user && requireRole(user, ['OWNER', 'ADMIN'])) {
+      fetchFacilities();
+    }
+  }, [user, loading, router]);
 
   const handleSelectFacility = (fId: string) => {
     setIsCreatingNew(false);

@@ -27,13 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please wait one minute before requesting another code.' }, { status: 429 });
     }
 
-    const otp = createOtp();
-    await sendVerificationSms(user.phone, otp);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { otpCode: hashOtp(otp), otpExpiresAt: otpExpiry(), otpAttempts: 0, otpLastSentAt: new Date() },
-    });
-    return NextResponse.json({ success: true, message: 'A new code was sent to your registered phone number.' });
+    return NextResponse.json({ success: true, message: 'OTP verification is currently disabled. You can log in directly.' });
   } catch (error) {
     console.error('OTP resend error:', error);
     return NextResponse.json({ error: 'We could not send a verification SMS. Please try again later.' }, { status: 503 });

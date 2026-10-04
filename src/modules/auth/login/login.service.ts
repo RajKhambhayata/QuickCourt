@@ -51,45 +51,20 @@ export class LoginService {
       return { success: false, error: 'Your owner application was rejected. Please contact support.', status: 403 };
     }
 
-    if (!user.isVerified) {
-      return {
-        success: false,
-        error: 'Please verify your phone number with OTP before signing in.',
-        status: 403,
-      };
-    }
-
-    // Portal role mismatch check
-    if (input.portalRole === 'ADMIN' && user.role !== 'ADMIN') {
-      return {
-        success: false,
-        error: 'This account does not have Admin access. Please use the correct login portal.',
-        status: 403,
-      };
-    }
-
-    if (input.portalRole === 'OWNER' && user.role !== 'OWNER') {
-      return {
-        success: false,
-        error: 'This account is not a Facility Owner account. Please use the Player login portal.',
-        status: 403,
-      };
-    }
-
-    if (input.portalRole === 'USER' && (user.role === 'ADMIN' || user.role === 'OWNER')) {
-      return {
-        success: false,
-        error: 'Please use the Owner or Admin login portal for your account type.',
-        status: 403,
-      };
-    }
-
     const isMatch = await comparePassword(input.password, user.password);
     if (!isMatch) {
       return { success: false, error: 'Invalid email or password', status: 401 };
     }
 
-    const token = signToken(user);
+    if (!user.isVerified) {
+      return { success: false, error: 'Please verify your account before signing in.', status: 403 };
+    }
+
+    if (user.role !== input.portalRole) {
+      return { success: false, error: 'This account does not have access to that portal.', status: 403 };
+    }
+
+    const token = signToken({ id: user.id, email: user.email, role: user.role, status: user.status });
 
     // Audit log for Admin and Owner logins
     if (user.role === 'ADMIN' || user.role === 'OWNER') {

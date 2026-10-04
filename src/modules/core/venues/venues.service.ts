@@ -76,8 +76,8 @@ export class VenuesService {
     input: CreateFacilityInput,
     txClient: Prisma.TransactionClient = prisma as unknown as Prisma.TransactionClient
   ) {
-    if (user.role !== 'OWNER' && user.role !== 'ADMIN') {
-      throw new Error('Unauthorized: Facility Owner or Admin role required');
+    if (user.role !== 'OWNER') {
+      throw new Error('Unauthorized: Facility Owner role required');
     }
 
     if (user.role === 'OWNER' && user.status === 'PENDING_APPROVAL') {
@@ -97,8 +97,7 @@ export class VenuesService {
         amenities: JSON.stringify(input.amenities || []),
         venueType: input.venueType || 'Indoor & Outdoor',
         ownerId: user.id,
-        // When owner creates facility, it is created as APPROVED for verified owners or PENDING if admin review needed
-        status: 'APPROVED',
+        status: 'PENDING',
       },
     });
 

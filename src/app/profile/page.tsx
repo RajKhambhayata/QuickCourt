@@ -42,6 +42,8 @@ export default function ProfilePage() {
           setName(data.user.name || '');
           setPhone(data.user.phone || '');
           setAvatar(data.user.avatar || '');
+        } else if (data && !data.user) {
+          router.push('/login');
         }
       })
       .catch((err) => console.error(err))

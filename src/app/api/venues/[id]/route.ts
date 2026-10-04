@@ -1,6 +1,10 @@
+import { unstable_cache } from 'next/cache';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
+import { revalidateVenue } from '@/lib/cache';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
@@ -8,27 +12,36 @@ export async function GET(
 ) {
   try {
     const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const reviewsPage = parseInt(searchParams.get('reviewsPage') || '1');
+    const reviewsLimit = Math.min(parseInt(searchParams.get('reviewsLimit') || '10'), 50);
 
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      include: {
-        courts: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' },
-        },
-        reviews: {
-          include: {
-            user: {
-              select: { id: true, name: true, avatar: true },
-            },
+    const facility = await unstable_cache(
+      async () => prisma.facility.findUnique({
+        where: { id },
+        include: {
+          courts: {
+            where: { isActive: true },
+            orderBy: { name: 'asc' },
           },
-          orderBy: { createdAt: 'desc' },
+          reviews: {
+            take: reviewsLimit,
+            skip: (reviewsPage - 1) * reviewsLimit,
+            include: {
+              user: {
+                select: { id: true, name: true, avatar: true },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+          owner: {
+            select: { id: true, name: true, email: true, phone: true },
+          },
         },
-        owner: {
-          select: { id: true, name: true, email: true, phone: true },
-        },
-      },
-    });
+      }),
+      [`venue-${id}-${reviewsPage}-${reviewsLimit}`],
+      { revalidate: 60, tags: [`venue-${id}`] }
+    )();
 
     if (!facility) {
       return NextResponse.json({ error: 'Venue not found' }, { status: 404 });
@@ -50,6 +63,11 @@ export async function GET(
     const prices = facility.courts.map((c) => c.pricePerHour);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 400;
 
+    // Get total review count for pagination
+    const totalReviews = await prisma.review.count({
+      where: { facilityId: id },
+    });
+
     return NextResponse.json({
       facility: {
         ...facility,
@@ -57,8 +75,14 @@ export async function GET(
         sports: parsedSports,
         amenities: parsedAmenities,
         avgRating,
-        totalReviews: facility.reviews.length,
+        totalReviews,
         minPrice,
+      },
+      reviewsPagination: {
+        page: reviewsPage,
+        limit: reviewsLimit,
+        totalCount: totalReviews,
+        totalPages: Math.ceil(totalReviews / reviewsLimit),
       },
     });
   } catch (error) {
@@ -103,6 +127,9 @@ export async function PUT(
         ...(images ? { images: JSON.stringify(images) } : {}),
       },
     });
+
+    // Invalidate venue cache
+    revalidateVenue(id);
 
     return NextResponse.json({ success: true, facility: updated });
   } catch (error) {

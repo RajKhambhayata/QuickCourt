@@ -2,25 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import CourtSelector from '@/components/CourtSelector';
 import BookingModal from '@/components/BookingModal';
 import ReviewSection from '@/components/ReviewSection';
 import { FacilityWithDetails, CourtItem, SlotStatus } from '@/lib/types';
-import {
-  MapPin,
-  Star,
-  CheckCircle2,
-  Phone,
-  Mail,
-  Shield,
-  Clock,
-  ArrowLeft,
-  Share2,
-  CalendarCheck,
-  Building,
-  Sparkles,
-  AlertTriangle,
-} from 'lucide-react';
 
 export default function SingleVenuePage() {
   const params = useParams();
@@ -30,6 +16,7 @@ export default function SingleVenuePage() {
   const [venue, setVenue] = useState<FacilityWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [saved, setSaved] = useState(false);
 
   // Booking Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,17 +45,12 @@ export default function SingleVenuePage() {
     setIsModalOpen(true);
   };
 
-  const scrollToBooking = () => {
-    const el = document.getElementById('booking-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
-
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">
-        <div className="animate-pulse space-y-4">
-          <div className="h-96 bg-slate-200 rounded-3xl" />
-          <div className="h-8 bg-slate-200 rounded w-1/3 mx-auto" />
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-16 text-center text-tertiary">
+        <div className="animate-pulse space-y-4 max-w-4xl mx-auto">
+          <div className="h-96 bg-surface-container rounded-2xl" />
+          <div className="h-8 bg-surface-container rounded w-1/3 mx-auto" />
         </div>
       </div>
     );
@@ -76,12 +58,12 @@ export default function SingleVenuePage() {
 
   if (!venue) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
-        <Building className="w-12 h-12 text-slate-400 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-800">Venue Not Found</h2>
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-20 text-center space-y-4">
+        <span className="material-symbols-outlined text-5xl text-outline">stadium</span>
+        <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Venue Not Found</h2>
         <button
           onClick={() => router.push('/venues')}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+          className="px-6 py-2.5 bg-primary-container text-on-primary-container font-label-lg font-bold rounded-lg"
         >
           Back to Venues Directory
         </button>
@@ -89,209 +71,281 @@ export default function SingleVenuePage() {
     );
   }
 
-  const images = venue.images && venue.images.length > 0 ? venue.images : [
-    'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200'
+  const defaultBentoImages = [
+    'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200',
+    'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800',
+    'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800',
+    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800',
   ];
 
+  const images = venue.images && venue.images.length > 0 ? venue.images : defaultBentoImages;
+  const primarySport = venue.sports && venue.sports.length > 0 ? venue.sports[0] : 'Sports';
+
   return (
-    <div className="bg-slate-50 min-h-screen pb-20">
-      {/* Top breadcrumb bar */}
-      <div className="bg-white border-b border-slate-200 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <button
-            onClick={() => router.push('/venues')}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-emerald-600 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to All Venues</span>
-          </button>
+    <div className="bg-background min-h-screen pb-32 text-on-surface">
+      <div className="max-w-[1280px] w-full mx-auto px-4 md:px-6 lg:px-10 py-4">
+        {/* Breadcrumb Row */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-on-surface-variant font-label-md text-label-md mb-3">
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          <Link href={`/venues?city=${encodeURIComponent(venue.city || 'Bengaluru')}`} className="hover:text-primary transition-colors">
+            {venue.city || 'Bengaluru'}
+          </Link>
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          <Link href={`/venues?sport=${encodeURIComponent(primarySport)}`} className="hover:text-primary transition-colors">
+            {primarySport}
+          </Link>
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span className="text-on-surface font-semibold truncate">{venue.name}</span>
+        </nav>
 
-          <button
-            onClick={() => {
-              if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Venue link copied to clipboard!');
-              }
-            }}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-emerald-600 transition"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>Share Venue</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* 1. Photo Gallery */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 h-[350px] sm:h-[450px] rounded-3xl overflow-hidden relative shadow-md">
-            <img
-              src={images[activeImageIndex] || images[0]}
-              alt={venue.name}
-              className="w-full h-full object-cover transition-all duration-300"
-            />
-            <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold">
-              {venue.venueType || 'Indoor & Outdoor'}
-            </div>
-          </div>
-
-          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible">
-            {images.map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveImageIndex(idx)}
-                className={`relative h-28 sm:h-[138px] min-w-[120px] rounded-2xl overflow-hidden border-2 transition ${
-                  activeImageIndex === idx
-                    ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
-                    : 'border-transparent opacity-75 hover:opacity-100'
-                }`}
-              >
-                <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 2. Venue Main Details & Quick Booking Action */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
+        {/* Header & Verification Badges */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+          <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-emerald-50 text-emerald-700 font-bold text-xs px-2.5 py-0.5 rounded-full border border-emerald-200">
-                Verified Venue
+              <h1 className="font-headline-lg text-headline-lg text-on-surface font-black tracking-tight">
+                {venue.name}
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-bold shadow-sm">
+                <span className="material-symbols-outlined text-[15px] material-symbols-fill">verified</span>
+                Verified Facility
               </span>
-              <div className="flex items-center gap-1 text-xs font-bold text-slate-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                <span>{venue.avgRating ? venue.avgRating.toFixed(1) : '5.0'}</span>
-                <span className="text-slate-500 font-normal">({venue.totalReviews || 0} reviews)</span>
-              </div>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-md text-label-md font-bold">
+                <span className="material-symbols-outlined text-[15px] text-secondary material-symbols-fill">star</span>
+                {venue.avgRating ? venue.avgRating.toFixed(1) : '4.9'}{' '}
+                <span className="font-normal text-on-secondary-fixed/80">({venue.totalReviews || 12} reviews)</span>
+              </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{venue.name}</h1>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{venue.address}, {venue.city}</span>
-            </div>
-
-            {/* Sports Offered Tags */}
-            <div className="pt-2 flex flex-wrap gap-1.5">
-              {venue.sports.map((sport) => (
-                <span
-                  key={sport}
-                  className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition"
-                >
-                  🏸 {sport}
-                </span>
-              ))}
-            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant flex flex-wrap items-center gap-y-1 gap-x-2">
+              <span className="inline-flex items-center gap-0.5 text-on-surface font-medium">
+                <span className="material-symbols-outlined text-primary text-[18px]">location_on</span>
+                {venue.address}, {venue.city} (2.1 km)
+              </span>
+              <span className="text-outline-variant">•</span>
+              <span className="inline-flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-[18px]">schedule</span>
+                Open 06:00 AM – 11:30 PM
+              </span>
+              <span className="text-outline-variant">•</span>
+              <span className="inline-flex items-center gap-0.5 text-on-surface">
+                <span className="material-symbols-outlined text-[18px]">sports_tennis</span>
+                {venue.courts.length} Certified Courts
+              </span>
+            </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-4 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
-            <div>
-              <span className="text-xs text-slate-400 font-semibold block uppercase">Starts from</span>
-              <span className="text-3xl font-black text-slate-900">
-                ₹{venue.minPrice || 400}
-                <span className="text-xs font-normal text-slate-500"> / hour</span>
-              </span>
-            </div>
-
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 self-start shrink-0">
             <button
-              onClick={scrollToBooking}
-              className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition flex items-center gap-2 w-full sm:w-auto justify-center"
+              onClick={() => {
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Arena link copied to clipboard!');
+                }
+              }}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors shadow-sm"
             >
-              <CalendarCheck className="w-4 h-4" />
-              <span>Book Now</span>
+              <span className="material-symbols-outlined text-[18px]">share</span>
+              <span>Share</span>
+            </button>
+            <button
+              onClick={() => setSaved(!saved)}
+              type="button"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-label-md text-label-md transition-colors shadow-sm ${
+                saved ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {saved ? 'bookmark' : 'bookmark_border'}
+              </span>
+              <span>{saved ? 'Saved' : 'Save'}</span>
             </button>
           </div>
         </div>
 
-        {/* 3. About Venue & Amenities */}
+        {/* Venue Gallery Bento */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-2xl overflow-hidden mb-6 shadow-md max-h-[460px]">
+          {/* Main Hero Shot */}
+          <div className="md:col-span-2 lg:col-span-3 relative h-72 md:h-full group overflow-hidden bg-surface-container">
+            <img
+              src={images[activeImageIndex] || images[0]}
+              alt={venue.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-label-md">
+              <span className="material-symbols-outlined text-primary-container text-[16px]">sports_tennis</span>
+              <span>Court Fleet • BWF &amp; Pro Tournament Grade</span>
+            </div>
+          </div>
+
+          {/* Secondary Vertical Shot */}
+          <div className="relative h-44 md:h-full hidden md:block group overflow-hidden bg-surface-container">
+            <img
+              src={images[1] || images[0]}
+              alt="Surface Layering"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            />
+            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded bg-inverse-surface/75 backdrop-blur-sm text-inverse-on-surface font-label-md text-[11px] font-semibold">
+              Synthetic Layering
+            </div>
+          </div>
+
+          {/* Stacked Right Tiles */}
+          <div className="flex flex-col gap-2 lg:col-span-2">
+            <div className="relative h-[146px] group overflow-hidden bg-surface-container rounded-lg">
+              <img
+                src={images[2] || images[0]}
+                alt="Pro Shop"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              />
+              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-inverse-surface/75 backdrop-blur-sm text-inverse-on-surface font-label-md text-[11px] font-semibold">
+                Equipment &amp; Pro Shop
+              </div>
+            </div>
+            <div className="relative h-[146px] group overflow-hidden bg-surface-container rounded-lg">
+              <img
+                src={images[3] || images[0]}
+                alt="Locker & Showers"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              />
+              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-inverse-surface/75 backdrop-blur-sm text-inverse-on-surface font-label-md text-[11px] font-semibold">
+                Showers &amp; Secure Lockers
+              </div>
+              <button
+                onClick={() => setActiveImageIndex((activeImageIndex + 1) % images.length)}
+                className="absolute bottom-2 right-2 flex items-center gap-1 px-3 py-1 rounded-lg bg-surface-container-lowest/90 backdrop-blur-md text-on-surface font-label-md text-label-md shadow-md hover:bg-surface-container-lowest transition-colors"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[16px]">photo_library</span>
+                <span>+{images.length} photos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Amenity Pills Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-8 no-scrollbar">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">ac_unit</span>
+            <span>Air Conditioned</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">sports_handball</span>
+            <span>Shuttlecock Rental</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">shower</span>
+            <span>Shower &amp; Locker</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">local_parking</span>
+            <span>Free 4-Wheeler Parking</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">sports</span>
+            <span>Pro Coach on Demand</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">local_cafe</span>
+            <span>Cafeteria &amp; Juice Bar</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md whitespace-nowrap shadow-sm border border-surface-container-high/40">
+            <span className="material-symbols-outlined text-primary text-[18px]">videocam</span>
+            <span>HD Match Recording</span>
+          </div>
+        </div>
+
+        {/* Live Slot Matrix Section */}
+        {venue.courts.length > 0 ? (
+          <div className="mb-10">
+            <CourtSelector
+              courts={venue.courts}
+              facilityName={venue.name}
+              onProceedToBooking={handleProceedToBooking}
+            />
+          </div>
+        ) : (
+          <div className="p-8 bg-surface-container-lowest rounded-2xl border border-surface-container-high text-center text-on-surface-variant font-semibold mb-10">
+            Courts are currently being updated by the facility manager.
+          </div>
+        )}
+
+        {/* Venue Information & Rules Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            {/* About Venue */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
-              <h3 className="text-lg font-black text-slate-900">About this Venue</h3>
-              <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-                {venue.description}
+          <div className="lg:col-span-2 space-y-6">
+            {/* About Arena */}
+            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high/60 p-6 shadow-sm space-y-3">
+              <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">About {venue.name}</h3>
+              <p className="font-body-md text-body-md text-tertiary leading-relaxed whitespace-pre-line">
+                {venue.description || 'Premier athletic destination featuring BWF certified courts, high-grade anti-glare tournament LED lighting, player lounges, and modern changing facilities.'}
               </p>
             </div>
 
             {/* Amenities Grid */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
-              <h3 className="text-lg font-black text-slate-900">Amenities & Facilities</h3>
+            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high/60 p-6 shadow-sm space-y-3">
+              <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Included Facility Amenities</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {venue.amenities.map((amenity) => (
                   <div
                     key={amenity}
-                    className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2.5 text-xs font-bold text-slate-800"
+                    className="p-3 bg-surface-container-low rounded-xl border border-surface-container-high/40 flex items-center gap-2 text-xs font-bold text-on-surface"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
                     <span>{amenity}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 4. Court Slot Selector Section */}
-            {venue.courts.length > 0 ? (
-              <CourtSelector
-                courts={venue.courts}
-                facilityName={venue.name}
-                onProceedToBooking={handleProceedToBooking}
-              />
-            ) : (
-              <div className="p-8 bg-amber-50 rounded-2xl border border-amber-200 text-center text-amber-800 text-xs">
-                Courts are currently being updated by the facility owner.
-              </div>
-            )}
-
-            {/* 5. Reviews Section */}
+            {/* Customer Reviews Section */}
             <ReviewSection
               facilityId={venue.id}
               reviews={venue.reviews}
-              avgRating={venue.avgRating || 5.0}
+              avgRating={venue.avgRating || 4.9}
             />
           </div>
 
           {/* Sidebar Venue Info & Rules */}
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
-                Operating Schedule
+            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high/60 p-6 shadow-sm space-y-4">
+              <h3 className="font-label-md text-label-md uppercase font-bold text-tertiary tracking-wider">
+                Operating Rules &amp; Guidelines
               </h3>
-              <div className="flex items-center gap-3 text-xs text-slate-700">
-                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Open 7 Days: 06:00 AM – 11:00 PM</span>
+              <div className="flex items-center gap-3 text-xs text-on-surface">
+                <span className="material-symbols-outlined text-primary text-[20px]">schedule</span>
+                <span className="font-semibold">Open 7 Days: 06:00 AM – 11:30 PM</span>
               </div>
-              <div className="pt-3 border-t border-slate-100 text-xs text-slate-500 space-y-2">
-                <p className="font-semibold text-slate-800">Venue Rules:</p>
+              <div className="pt-3 border-t border-surface-container-high/40 text-xs text-tertiary space-y-2">
+                <p className="font-bold text-on-surface">Player Policy:</p>
                 <ul className="list-disc pl-4 space-y-1">
-                  <li>Non-marking sports shoes mandatory for wooden courts.</li>
-                  <li>Please arrive 10 minutes prior to your booked slot.</li>
-                  <li>Equipment available on rent at reception.</li>
+                  <li>Non-marking rubber shoes strictly mandatory on wooden/mat courts.</li>
+                  <li>Arrive 10 minutes prior to your allocated slot for gate barcode scan.</li>
+                  <li>Yonex &amp; Victor equipment available on rent at the reception pro shop.</li>
+                  <li>Turnstile QR pass automatically sent to your registered WhatsApp number.</li>
                 </ul>
               </div>
             </div>
 
             {venue.owner && (
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
-                  Facility Manager
+              <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high/60 p-6 shadow-sm space-y-3">
+                <h3 className="font-label-md text-label-md uppercase font-bold text-tertiary tracking-wider">
+                  Facility Management
                 </h3>
-                <div className="text-xs space-y-1">
-                  <div className="font-bold text-slate-900">{venue.owner.name}</div>
+                <div className="text-xs space-y-1.5">
+                  <div className="font-bold text-sm text-on-surface">{venue.owner.name}</div>
                   {venue.owner.email && (
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <div className="flex items-center gap-2 text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[16px] text-tertiary">mail</span>
                       <span>{venue.owner.email}</span>
                     </div>
                   )}
-                  {venue.owner.phone && (
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{venue.owner.phone}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 text-primary font-semibold pt-1">
+                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                    <span>Verified Arena Partner</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -299,7 +353,7 @@ export default function SingleVenuePage() {
         </div>
       </div>
 
-      {/* Booking Checkout Modal */}
+      {/* Booking Modal */}
       {selectedCourt && selectedSlot && (
         <BookingModal
           isOpen={isModalOpen}

@@ -3,23 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Calendar,
-  Building2,
-  Shield,
-  User as UserIcon,
-  LogOut,
-  Menu,
-  X,
-  Compass,
-  PlusCircle,
-  Trophy,
-  ChevronDown,
-  Coins,
-  Zap,
-  ShoppingBag,
-  Gamepad2,
-} from 'lucide-react';
 import { UserSession } from '@/lib/types';
 
 export default function Navbar() {
@@ -49,108 +32,116 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-surface-container-high/60 shadow-[0_1px_8px_rgba(11,28,48,0.06)] transition-all">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10">
+        <div className="flex items-center justify-between h-20 gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-              <Trophy className="w-5 h-5" />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-10 h-10 rounded-lg bg-inverse-surface flex items-center justify-center text-primary-container shadow-[0_2px_8px_rgba(0,230,118,0.25)] group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-[24px]">bolt</span>
             </div>
-            <div>
-              <span className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-1 font-display">
-                Quick<span className="text-gradient">Court</span>
-              </span>
-              <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest -mt-1">
-                Sports Booking
-              </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="font-headline-sm text-headline-sm text-on-surface font-extrabold tracking-tight">
+                  QuickCourt
+                </span>
+                <span className="px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-[11px] font-bold uppercase tracking-wider">
+                  LIVE
+                </span>
+              </div>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             <Link
               href="/venues"
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                isActive('/venues')
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                isActive('/venues') && !pathname.includes('?')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <Compass className="w-4 h-4 text-emerald-600" />
-              Explore Venues
+              Find Courts
+            </Link>
+
+            <Link
+              href="/venues?sport=Badminton"
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                pathname.includes('sport=')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              Sports
+            </Link>
+
+            <Link
+              href="/rewards"
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                isActive('/rewards')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              Rewards
+            </Link>
+
+            <Link
+              href="/karting"
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                isActive('/karting')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              Go-Karting
+            </Link>
+
+            <Link
+              href="/games"
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                isActive('/games')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              Games
+            </Link>
+
+            <Link
+              href="/food-court"
+              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                isActive('/food-court')
+                  ? 'bg-surface-container text-on-surface font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              Cafeteria
             </Link>
 
             {user?.role === 'USER' && (
-              <>
-                <Link
-                  href="/my-bookings"
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                    isActive('/my-bookings')
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Calendar className="w-4 h-4 text-emerald-600" />
-                  My Bookings
-                </Link>
-                <Link
-                  href="/rewards"
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                    isActive('/rewards')
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Coins className="w-4 h-4 text-amber-500" />
-                  Rewards
-                </Link>
-                <Link
-                  href="/karting"
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                    isActive('/karting')
-                      ? 'bg-rose-50 text-rose-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Zap className="w-4 h-4 text-rose-500" />
-                  Karting
-                </Link>
-                <Link
-                  href="/games"
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                    isActive('/games')
-                      ? 'bg-violet-50 text-violet-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Gamepad2 className="w-4 h-4 text-violet-500" />
-                  Games
-                </Link>
-                <Link
-                  href="/food-court"
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
-                    isActive('/food-court')
-                      ? 'bg-orange-50 text-orange-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <ShoppingBag className="w-4 h-4 text-orange-500" />
-                  Food Court
-                </Link>
-              </>
+              <Link
+                href="/my-bookings"
+                className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
+                  isActive('/my-bookings')
+                    ? 'bg-surface-container text-on-surface font-bold'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                }`}
+              >
+                My Bookings
+              </Link>
             )}
 
             {user?.role === 'OWNER' && (
               <Link
                 href="/owner/dashboard"
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
                   isActive('/owner')
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'bg-surface-container text-on-surface font-bold'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                 }`}
               >
-                <Building2 className="w-4 h-4 text-emerald-600" />
                 Owner Portal
               </Link>
             )}
@@ -158,43 +149,80 @@ export default function Navbar() {
             {user?.role === 'ADMIN' && (
               <Link
                 href="/admin/dashboard"
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+                className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
                   isActive('/admin')
-                    ? 'bg-purple-50 text-purple-700'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'bg-surface-container text-on-surface font-bold'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                 }`}
               >
-                <Shield className="w-4 h-4 text-purple-600" />
                 Admin Panel
               </Link>
             )}
           </nav>
 
-          {/* Right Action / Profile */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right Action Group */}
+          <div className="flex items-center gap-3">
+            {/* Location selector */}
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer">
+              <span className="material-symbols-outlined text-[18px] text-primary">location_on</span>
+              <span className="font-label-md text-label-md font-semibold text-on-surface">Bengaluru, KA</span>
+              <span className="material-symbols-outlined text-[16px]">expand_more</span>
+            </div>
+
+            {/* Quick search shortcut */}
+            <Link
+              href="/venues"
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">search</span>
+              <span className="font-label-md text-label-md">Quick Search</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-data-mono text-body-sm shadow-[0_1px_2px_rgba(0,0,0,0.08)]">⌘K</kbd>
+            </Link>
+
+            {/* List Your Facility (Owner CTA) */}
+            <Link
+              href="/owner/signup"
+              className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-secondary-container text-on-secondary font-label-lg text-label-lg hover:opacity-95 transition-opacity shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">add_business</span>
+              <span>List Your Facility</span>
+            </Link>
+
+            {/* Notifications Button */}
+            <button
+              aria-label="Notifications"
+              type="button"
+              className="relative w-10 h-10 rounded-lg flex items-center justify-center bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest" />
+            </button>
+
+            {/* User Profile or Login/Signup */}
             {user ? (
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition border border-slate-200"
+                  className="flex items-center gap-1.5 p-1 rounded-full hover:bg-surface-container transition cursor-pointer"
                 >
                   <img
                     src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
                     alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover border border-emerald-500"
+                    className="w-8 h-8 rounded-full object-cover border border-primary-container"
                   />
-                  <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate pr-2">
-                    {user.name}
+                  <span className="material-symbols-outlined text-on-surface-variant text-[18px] hidden sm:block">
+                    expand_more
                   </span>
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50 animate-in fade-in slide-in-from-top-2">
-                    <div className="px-4 py-2 border-b border-slate-100">
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Signed in as</p>
-                      <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 uppercase">
+                  <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-2 border-b border-surface-container-high">
+                      <p className="font-label-md text-[10px] text-tertiary uppercase font-bold tracking-wider">Signed in as</p>
+                      <p className="font-label-lg text-sm font-bold text-on-surface truncate">{user.name}</p>
+                      <p className="font-body-sm text-xs text-tertiary truncate">{user.email}</p>
+                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary-container text-on-primary-container uppercase">
                         {user.role}
                       </span>
                     </div>
@@ -202,20 +230,20 @@ export default function Navbar() {
                     <Link
                       href="/profile"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                     >
-                      <UserIcon className="w-4 h-4 text-slate-400" />
-                      Profile Settings
+                      <span className="material-symbols-outlined text-[16px] text-tertiary">person</span>
+                      <span>Profile Settings</span>
                     </Link>
 
                     {user.role === 'USER' && (
                       <Link
                         href="/my-bookings"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        My Bookings
+                        <span className="material-symbols-outlined text-[16px] text-tertiary">calendar_month</span>
+                        <span>My Bookings</span>
                       </Link>
                     )}
 
@@ -223,10 +251,10 @@ export default function Navbar() {
                       <Link
                         href="/owner/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Building2 className="w-4 h-4 text-emerald-500" />
-                        Facility Management
+                        <span className="material-symbols-outlined text-[16px] text-primary">domain</span>
+                        <span>Facility Management</span>
                       </Link>
                     )}
 
@@ -234,251 +262,213 @@ export default function Navbar() {
                       <Link
                         href="/admin/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-purple-700 hover:bg-purple-50"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Shield className="w-4 h-4 text-purple-500" />
-                        Admin Control Center
+                        <span className="material-symbols-outlined text-[16px] text-secondary">admin_panel_settings</span>
+                        <span>Admin Control Center</span>
                       </Link>
                     )}
 
-                    <div className="border-t border-slate-100 my-1" />
+                    <div className="border-t border-surface-container-high my-1" />
 
                     <button
+                      type="button"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 text-left"
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-error hover:bg-error-container/20 text-left transition-colors"
                     >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
+                      <span className="material-symbols-outlined text-[16px]">logout</span>
+                      <span>Sign Out</span>
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                {/* Portal Login Dropdown */}
+                {/* Login Dropdown */}
                 <div className="relative">
                   <button
-                    onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
-                    className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition"
+                    type="button"
+                    onClick={() => {
+                      setLoginDropdownOpen(!loginDropdownOpen);
+                      setSignupDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
                   >
-                    Log In <ChevronDown className="w-3.5 h-3.5" />
+                    <span>Log In</span>
+                    <span className="material-symbols-outlined text-[16px]">expand_more</span>
                   </button>
+
                   {loginDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
-                      <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Your Portal</p>
+                    <div className="absolute right-0 mt-2 w-52 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
+                      <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Select Portal</p>
                       <Link
                         href="/player/login"
                         onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Trophy className="w-4 h-4 text-emerald-500" />
+                        <span className="material-symbols-outlined text-[18px] text-primary">sports_tennis</span>
                         <div>
                           <div>Player Login</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Book courts & play</div>
+                          <div className="text-[10px] text-tertiary font-normal">Book &amp; play</div>
                         </div>
                       </Link>
                       <Link
                         href="/owner/login"
                         onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Building2 className="w-4 h-4 text-teal-500" />
+                        <span className="material-symbols-outlined text-[18px] text-secondary">domain</span>
                         <div>
                           <div>Facility Owner</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Manage turfs & courts</div>
+                          <div className="text-[10px] text-tertiary font-normal">Manage turfs</div>
                         </div>
                       </Link>
-                      <div className="border-t border-slate-100 my-1" />
+                      <div className="border-t border-surface-container-high my-1" />
                       <Link
                         href="/admin/login"
                         onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-purple-50 hover:text-purple-700"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Shield className="w-4 h-4 text-purple-500" />
+                        <span className="material-symbols-outlined text-[18px] text-outline">admin_panel_settings</span>
                         <div>
                           <div>Super Admin</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Platform control</div>
+                          <div className="text-[10px] text-tertiary font-normal">Platform control</div>
                         </div>
                       </Link>
                     </div>
                   )}
                 </div>
-                {/* Portal Sign Up Dropdown */}
+
+                {/* Sign Up Dropdown */}
                 <div className="relative">
                   <button
+                    type="button"
                     onClick={() => {
                       setSignupDropdownOpen(!signupDropdownOpen);
                       setLoginDropdownOpen(false);
                     }}
-                    className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-lg shadow-lg shadow-emerald-500/25 transition flex items-center gap-1.5"
+                    className="px-4 py-2 text-xs font-extrabold text-on-primary-container bg-primary-container hover:bg-inverse-primary rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                   >
-                    <PlusCircle className="w-4 h-4" />
                     <span>Sign Up</span>
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <span className="material-symbols-outlined text-[16px]">expand_more</span>
                   </button>
+
                   {signupDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
-                      <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Create An Account</p>
+                    <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
+                      <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Create Account</p>
                       <Link
                         href="/player/signup"
                         onClick={() => setSignupDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Trophy className="w-4 h-4 text-emerald-500" />
+                        <span className="material-symbols-outlined text-[18px] text-primary">sports_tennis</span>
                         <div>
                           <div>Player Account</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Free player registration</div>
+                          <div className="text-[10px] text-tertiary font-normal">Free registration</div>
                         </div>
                       </Link>
                       <Link
                         href="/owner/signup"
                         onClick={() => setSignupDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700"
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <Building2 className="w-4 h-4 text-teal-500" />
+                        <span className="material-symbols-outlined text-[18px] text-secondary">domain</span>
                         <div>
                           <div>Facility Owner</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Apply to list arena & turfs</div>
+                          <div className="text-[10px] text-tertiary font-normal">List arena &amp; turfs</div>
                         </div>
-                      </Link>
-                      <div className="border-t border-slate-100 my-1" />
-                      <Link
-                        href="/admin/signup"
-                        onClick={() => setSignupDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-purple-50 hover:text-purple-700"
-                      >
-                        <Shield className="w-4 h-4 text-purple-500" />
-                        <div>
-                          <div>Administrator</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Security key registration</div>
-                        </div>
-                      </Link>
-                      <div className="border-t border-slate-100 my-1" />
-                      <Link
-                        href="/signup"
-                        onClick={() => setSignupDropdownOpen(false)}
-                        className="block px-4 py-1.5 text-center text-xs font-bold text-emerald-600 hover:underline"
-                      >
-                        View Portal Chooser →
                       </Link>
                     </div>
                   )}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="flex md:hidden items-center">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile menu hamburger */}
+            <div className="flex xl:hidden items-center ml-1">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-[24px]">
+                  {mobileMenuOpen ? 'close' : 'menu'}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 animate-in slide-in-from-top-2">
+        <div className="xl:hidden border-t border-surface-container-high bg-surface-container-lowest px-4 py-4 space-y-1 animate-in slide-in-from-top-2">
           <Link
             href="/venues"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
           >
-            Explore Venues
+            Find Courts
           </Link>
-          {user?.role === 'USER' && (
-            <>
-              <Link
-                href="/my-bookings"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                My Bookings
-              </Link>
-              <Link
-                href="/rewards"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Rewards
-              </Link>
-              <Link
-                href="/karting"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Karting
-              </Link>
-              <Link
-                href="/games"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Games
-              </Link>
-              <Link
-                href="/food-court"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Food Court
-              </Link>
-            </>
-          )}
-          {user?.role === 'OWNER' && (
+          <Link
+            href="/venues?sport=Badminton"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+          >
+            Sports
+          </Link>
+          <Link
+            href="/rewards"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+          >
+            Rewards
+          </Link>
+          <Link
+            href="/karting"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+          >
+            Go-Karting
+          </Link>
+          <Link
+            href="/games"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+          >
+            Games
+          </Link>
+          <Link
+            href="/food-court"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+          >
+            Cafeteria
+          </Link>
+
+          {user && (
             <Link
-              href="/owner/dashboard"
+              href="/profile"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
+              className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
             >
-              Owner Portal
+              Profile Settings
             </Link>
           )}
-          {user?.role === 'ADMIN' && (
-            <Link
-              href="/admin/dashboard"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-purple-700 hover:bg-purple-50"
-            >
-              Admin Panel
-            </Link>
-          )}
-          {user ? (
-            <>
-              <Link
-                href="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Profile Settings
-              </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-rose-600 hover:bg-rose-50"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
+
+          {!user && (
             <div className="pt-2 flex gap-2">
               <Link
-                href="/login"
+                href="/player/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-1/2 text-center py-2 px-3 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700"
+                className="w-1/2 text-center py-2 px-3 border border-surface-container-high rounded-lg text-xs font-bold text-on-surface"
               >
                 Log In
               </Link>
               <Link
-                href="/signup"
+                href="/player/signup"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-1/2 text-center py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg text-sm font-semibold"
+                className="w-1/2 text-center py-2 px-3 bg-primary-container text-on-primary-container rounded-lg text-xs font-bold"
               >
                 Sign Up
               </Link>

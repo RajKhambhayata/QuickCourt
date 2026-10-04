@@ -1,16 +1,49 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Building2, Mail, Lock, ArrowRight, AlertCircle, Loader2, Shield, Clock } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Building2, Mail, Lock, ArrowRight, AlertCircle, Loader2, Shield, Clock, LogOut, Info } from 'lucide-react';
 
-export default function OwnerLoginPage() {
+interface ExistingSession {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
+// Inner component that uses useSearchParams — must be wrapped in Suspense
+function OwnerLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingSession, setExistingSession] = useState<ExistingSession | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  // Check if the user is already signed into a different portal
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user) setExistingSession(data.user);
+      })
+      .catch(() => {})
+      .finally(() => setSessionChecked(true));
+  }, []);
+
+  const fromPath = searchParams.get('from') || '/owner/dashboard';
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setExistingSession(null);
+    setSigningOut(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +60,11 @@ export default function OwnerLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      // Owners with pending approval land on dashboard to see status banner
-      router.push('/owner/dashboard');
+      if (data.pendingApproval) {
+        router.push('/owner/pending');
+      } else {
+        router.push(fromPath.startsWith('/owner') ? fromPath : '/owner/dashboard');
+      }
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -37,6 +73,114 @@ export default function OwnerLoginPage() {
     }
   };
 
+  const roleLabel = (role: string) =>
+    role === 'ADMIN' ? 'Platform Administrator' : role === 'OWNER' ? 'Facility Owner' : 'Player';
+
+  return (
+    <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xl">
+      <div className="space-y-2">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/20 lg:hidden">
+          <Building2 className="w-6 h-6 text-white" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900">Facility Owner Sign In</h2>
+        <p className="text-xs text-slate-500">Access your arena management dashboard.</p>
+      </div>
+
+      {/* Already signed-in banner */}
+      {sessionChecked && existingSession && existingSession.role !== 'OWNER' && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+          <div className="flex items-start gap-2.5 text-amber-900">
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+            <div className="text-xs font-medium">
+              <p className="font-bold text-sm text-amber-800">Already signed in as {roleLabel(existingSession.role)}</p>
+              <p className="mt-0.5 text-amber-700">
+                <span className="font-semibold">{existingSession.name}</span> ({existingSession.email})
+              </p>
+              <p className="mt-1.5">Sign out to access the Owner portal.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold transition"
+          >
+            {signingOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+            Sign Out of {roleLabel(existingSession.role)} Portal
+          </button>
+        </div>
+      )}
+
+      {/* Pending notice for unauthenticated owners */}
+      {!existingSession && (
+        <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+          <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+          <span>If your account is pending admin approval, you can still log in to check your application status.</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2 font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Hide form if signed in as a different role */}
+      {(!existingSession || existingSession.role === 'OWNER') && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Business Email</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="owner@yourarena.com"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Password</label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-extrabold text-xs transition shadow-lg shadow-teal-600/25 flex items-center justify-center gap-1.5"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Sign In as Owner</span><ArrowRight className="w-4 h-4" /></>}
+          </button>
+        </form>
+      )}
+
+      <div className="text-center text-xs text-slate-500 space-y-2">
+        <div>New facility owner?{' '}<Link href="/owner/signup" className="text-teal-600 font-bold hover:underline">Submit Owner Application</Link></div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-px bg-slate-200" /><span className="text-slate-400">other portals</span><div className="flex-1 h-px bg-slate-200" />
+        </div>
+        <div className="flex justify-center gap-3">
+          <Link href="/player/login" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition">Player Login</Link>
+          <Link href="/admin/login" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition flex items-center gap-1"><Shield className="w-3 h-3" />Admin</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function OwnerLoginPage() {
   return (
     <div className="min-h-[92vh] flex">
       {/* Left panel */}
@@ -68,78 +212,15 @@ export default function OwnerLoginPage() {
         <p className="text-xs text-teal-300/60">© 2026 QuickCourt · Owner Portal</p>
       </div>
 
-      {/* Right panel */}
+      {/* Right panel — Suspense required because OwnerLoginForm uses useSearchParams() */}
       <div className="flex-1 flex items-center justify-center px-4 py-12 bg-slate-50">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xl">
-          <div className="space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-500/20 lg:hidden">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-2xl font-black text-slate-900">Facility Owner Sign In</h2>
-            <p className="text-xs text-slate-500">Access your arena management dashboard.</p>
+        <Suspense fallback={
+          <div className="max-w-md w-full flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
           </div>
-
-          <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-            <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-            <span>If your account is pending admin approval, you can still log in to check your application status.</span>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2 font-medium">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Business Email</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="owner@yourarena.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-teal-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-teal-500"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-extrabold text-xs transition shadow-lg shadow-teal-600/25 flex items-center justify-center gap-1.5"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Sign In as Owner</span><ArrowRight className="w-4 h-4" /></>}
-            </button>
-          </form>
-
-          <div className="text-center text-xs text-slate-500 space-y-2">
-            <div>New facility owner?{' '}<Link href="/owner/signup" className="text-teal-600 font-bold hover:underline">Submit Owner Application</Link></div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-px bg-slate-200" /><span className="text-slate-400">other portals</span><div className="flex-1 h-px bg-slate-200" />
-            </div>
-            <div className="flex justify-center gap-3">
-              <Link href="/player/login" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition">Player Login</Link>
-              <Link href="/admin/login" className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition flex items-center gap-1"><Shield className="w-3 h-3" />Admin</Link>
-            </div>
-          </div>
-        </div>
+        }>
+          <OwnerLoginForm />
+        </Suspense>
       </div>
     </div>
   );

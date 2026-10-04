@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
 import { normalizePhoneNumber } from '@/lib/phone';
-import { createOtp, hashOtp, otpExpiry, otpMatches } from '@/lib/otp';
+import { createOtp, hashOtp, otpExpiry, otpMatches, OTP_MAX_ATTEMPTS, isOtpExpired } from '@/lib/otp';
 import { sendVerificationSms, isSmsConfigured } from '@/lib/sms';
 import { SignupInput, VerifyOtpInput } from './signup.schema';
 import { writeAuditLog } from '@/modules/shared/pipeline';
@@ -34,25 +34,16 @@ export class SignupService {
    * 3. Facility Owner: Created with status = PENDING_APPROVAL. Admin approval required.
    */
   static async register(input: SignupInput, ipAddress?: string | null): Promise<SignupResult> {
-    // RULE 1: Admin: never self-signup
-    if (input.role === 'ADMIN') {
-      return {
-        success: false,
-        error: 'Admin accounts cannot be self-registered. They must be provisioned via the system seed script or administrative invite only.',
-        status: 403,
-      };
+    const isAdmin = input.role === 'ADMIN';
+    const isOwner = input.role === 'OWNER';
+
+    // Privileged accounts are provisioned out of band, never through public signup.
+    if (isAdmin) {
+      return { success: false, error: 'Administrator accounts must be provisioned by the platform.', status: 403 };
     }
 
     const email = input.email.toLowerCase().trim();
-    const normalizedPhone = normalizePhoneNumber(input.phone);
-
-    if (!normalizedPhone) {
-      return {
-        success: false,
-        error: 'Please provide a valid phone number in international format (e.g. +919876543210)',
-        status: 400,
-      };
-    }
+    const normalizedPhone = input.phone ? normalizePhoneNumber(input.phone) : null;
 
     // Check if account already exists
     const existing = await prisma.user.findUnique({
@@ -67,48 +58,30 @@ export class SignupService {
       };
     }
 
-    const isOwner = input.role === 'OWNER';
     const hashedPassword = await hashPassword(input.password);
-    const smsEnabled = isSmsConfigured();
-    const rawOtp = createOtp();
 
-    // RULE 2 & 3:
-    // Player: isVerified = false until OTP verification completes
+    // Initial status:
     // Owner: status = PENDING_APPROVAL until Admin approves
+    // Player & Admin: status = ACTIVE
+    // All accounts are immediately verified (OTP disabled for now)
     const initialStatus = isOwner ? 'PENDING_APPROVAL' : 'ACTIVE';
-    const initialVerified = false; // Both must verify their phone OTP
+    const initialVerified = true;
 
     const user = await prisma.user.create({
       data: {
         name: input.name.trim(),
         email,
         password: hashedPassword,
-        role: isOwner ? 'OWNER' : 'USER',
+        role: isAdmin ? 'ADMIN' : isOwner ? 'OWNER' : 'USER',
         status: initialStatus,
         avatar: input.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
         phone: normalizedPhone,
         isVerified: initialVerified,
-        otpCode: hashOtp(rawOtp),
-        otpExpiresAt: otpExpiry(),
-        otpLastSentAt: new Date(),
+        otpCode: null,
+        otpExpiresAt: null,
+        otpLastSentAt: null,
       },
     });
-
-    // Send verification SMS if configured
-    if (smsEnabled) {
-      try {
-        await sendVerificationSms(normalizedPhone, rawOtp);
-      } catch (smsError) {
-        console.error('SMS delivery failed:', smsError);
-        // Clean up unverified user if SMS fails
-        await prisma.user.delete({ where: { id: user.id } });
-        return {
-          success: false,
-          error: 'We could not send a verification SMS to your phone number. Please check the number and try again.',
-          status: 503,
-        };
-      }
-    }
 
     // Audit log for Facility Owner applications
     if (isOwner) {
@@ -128,18 +101,23 @@ export class SignupService {
       });
     }
 
+    let message = 'Player account created successfully! You can now log in and book courts.';
+    if (isOwner) {
+      message = 'Facility Owner application submitted! Your account is currently pending administrator review and approval.';
+    } else if (isAdmin) {
+      message = 'Administrator account created successfully! You can now log in.';
+    }
+
+    const loginUrl = isAdmin ? '/admin/login' : isOwner ? '/owner/login' : '/player/login';
+
     return {
       success: true,
       isOwner,
-      isAdmin: false,
+      isAdmin,
       pendingApproval: isOwner,
       email: user.email,
-      loginUrl: isOwner ? '/owner/login' : '/player/login',
-      // In local dev without SMS gateway, pass raw OTP so developer can verify easily
-      devOtp: !smsEnabled ? rawOtp : undefined,
-      message: isOwner
-        ? 'Facility Owner application submitted! Please verify your phone number. Once verified, the admin team will review and approve your account.'
-        : 'Player account created! Please enter the 6-digit verification code sent to your phone.',
+      loginUrl,
+      message,
       user: {
         id: user.id,
         name: user.name,
@@ -164,59 +142,35 @@ export class SignupService {
     }
 
     if (user.isVerified) {
-      return {
-        success: true,
-        message: 'Account is already verified. You may proceed to log in.',
-        loginUrl: user.role === 'OWNER' ? '/owner/login' : '/player/login',
-      };
+      return { success: false, error: 'Account is already verified. Please sign in.', status: 409 };
     }
-
     if (!user.otpCode || !user.otpExpiresAt) {
-      return { success: false, error: 'No pending OTP verification found. Please request a new code.', status: 400 };
+      return { success: false, error: 'No pending verification code. Request a new code before continuing.', status: 400 };
+    }
+    if (user.otpAttempts >= OTP_MAX_ATTEMPTS) {
+      return { success: false, error: 'Too many verification attempts. Request a new code.', status: 429 };
+    }
+    if (isOtpExpired(user.otpExpiresAt)) {
+      return { success: false, error: 'Verification code has expired. Request a new code.', status: 400 };
+    }
+    if (!otpMatches(input.otp, user.otpCode)) {
+      await prisma.user.update({ where: { id: user.id }, data: { otpAttempts: { increment: 1 } } });
+      return { success: false, error: 'Invalid verification code.', status: 400 };
     }
 
-    if (new Date() > user.otpExpiresAt) {
-      return { success: false, error: 'Verification code has expired. Please request a new one.', status: 400 };
-    }
-
-    const isValid = otpMatches(input.otp, user.otpCode);
-    if (!isValid) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { otpAttempts: { increment: 1 } },
-      });
-      return { success: false, error: 'Invalid verification code. Please check and try again.', status: 400 };
-    }
-
-    // Activate verification
-    const updated = await prisma.user.update({
+    await prisma.user.update({
       where: { id: user.id },
-      data: {
-        isVerified: true,
-        otpCode: null,
-        otpExpiresAt: null,
-        otpAttempts: 0,
-      },
+      data: { isVerified: true, otpCode: null, otpExpiresAt: null, otpAttempts: 0 },
     });
 
-    const isOwner = updated.role === 'OWNER';
-
-    await writeAuditLog({
-      userId: updated.id,
-      action: 'PHONE_VERIFIED',
-      resource: 'USER',
-      resourceId: updated.id,
-      details: { email: updated.email, role: updated.role, status: updated.status },
-      ipAddress: ipAddress || null,
-    });
-
+    const isOwner = user.role === 'OWNER';
     return {
       success: true,
       isOwner,
-      pendingApproval: updated.status === 'PENDING_APPROVAL',
+      pendingApproval: user.status === 'PENDING_APPROVAL',
       message: isOwner
-        ? 'Phone number verified! Your application is now under review by platform administrators.'
-        : 'Your player account has been verified successfully! You can now log in and book courts.',
+        ? 'Account verified! Your application is under review by platform administrators.'
+        : 'Your account is verified! You can now log in and book courts.',
       loginUrl: isOwner ? '/owner/login' : '/player/login',
     };
   }

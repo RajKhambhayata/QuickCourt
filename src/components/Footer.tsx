@@ -1,58 +1,65 @@
 import React from 'react';
 import Link from 'next/link';
-import { Trophy, Shield, MapPin, Mail, Phone, Heart } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 pt-16 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
+    <footer className="bg-inverse-surface text-inverse-on-surface border-t border-surface-container-high/40 pt-16 pb-12">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-surface-variant/20">
           {/* Col 1 */}
           <div className="space-y-4 md:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-500/20">
-                <Trophy className="w-5 h-5" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 rounded-lg bg-surface-variant/15 flex items-center justify-center text-primary-container shadow-md group-hover:scale-105 transition-transform">
+                <span className="material-symbols-outlined text-[24px]">bolt</span>
               </div>
-              <span className="text-xl font-black tracking-tight text-white">
-                Quick<span className="text-emerald-500">Court</span>
-              </span>
-            </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              The fastest way to discover sports facilities, reserve floodlit courts, and play with your local community.
+              <div className="flex items-center gap-1.5">
+                <span className="font-headline-sm text-headline-sm text-surface font-extrabold tracking-tight">
+                  QuickCourt
+                </span>
+                <span className="px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-[10px] font-bold uppercase tracking-wider">
+                  LIVE
+                </span>
+              </div>
+            </Link>
+            <p className="font-body-sm text-sm text-tertiary-fixed leading-relaxed">
+              The fastest way to discover sports facilities, reserve floodlit courts, and play with your local community. Zero double-booking guarantee.
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <Shield className="w-4 h-4 text-emerald-500" />
-              <span>100% Verified Venues & Safe Checkout</span>
+            <div className="flex items-center gap-2 text-xs text-primary-fixed font-semibold">
+              <span className="material-symbols-outlined text-[16px]">verified</span>
+              <span>100% Verified Venues &amp; Instant WhatsApp Passes</span>
             </div>
           </div>
 
           {/* Col 2 */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Popular Sports</h4>
-            <ul className="space-y-2.5 text-sm">
+            <h4 className="font-label-md text-xs font-bold text-surface uppercase tracking-wider mb-4">
+              Explore Disciplines
+            </h4>
+            <ul className="space-y-2.5 font-body-sm text-sm text-tertiary-fixed">
               <li>
-                <Link href="/venues?sport=Badminton" className="hover:text-emerald-400 transition">
-                  Badminton Courts
+                <Link href="/venues?sport=Badminton" className="hover:text-primary-container transition-colors">
+                  Badminton (BWF Synthetic)
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Box Cricket" className="hover:text-emerald-400 transition">
-                  Box Cricket & Astroturf
+                <Link href="/venues?sport=Box Cricket" className="hover:text-primary-container transition-colors">
+                  Box Cricket &amp; Roofed Turfs
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Tennis" className="hover:text-emerald-400 transition">
-                  Lawn Tennis & Clay Courts
+                <Link href="/venues?sport=Pickleball" className="hover:text-primary-container transition-colors flex items-center gap-1.5">
+                  <span>Pickleball Clubs</span>
+                  <span className="px-1.5 py-0.2 rounded bg-primary-container text-on-primary-container text-[10px] font-bold">HOT</span>
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Pickleball" className="hover:text-emerald-400 transition">
-                  Pickleball Arenas
+                <Link href="/venues?sport=Tennis" className="hover:text-primary-container transition-colors">
+                  Lawn Tennis &amp; Clay Courts
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Basketball" className="hover:text-emerald-400 transition">
-                  FIBA Indoor Basketball
+                <Link href="/karting" className="hover:text-primary-container transition-colors">
+                  Go-Karting Circuits
                 </Link>
               </li>
             </ul>
@@ -60,26 +67,28 @@ export default function Footer() {
 
           {/* Col 3 */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">For Facility Owners</h4>
-            <ul className="space-y-2.5 text-sm">
+            <h4 className="font-label-md text-xs font-bold text-surface uppercase tracking-wider mb-4">
+              Facility Partners
+            </h4>
+            <ul className="space-y-2.5 font-body-sm text-sm text-tertiary-fixed">
               <li>
-                <Link href="/signup?role=OWNER" className="hover:text-emerald-400 transition">
+                <Link href="/owner/signup" className="hover:text-primary-container transition-colors">
                   List Your Sports Arena
                 </Link>
               </li>
               <li>
-                <Link href="/owner/dashboard" className="hover:text-emerald-400 transition">
-                  Owner Management Dashboard
+                <Link href="/owner/dashboard" className="hover:text-primary-container transition-colors">
+                  Operations Overview Matrix
                 </Link>
               </li>
               <li>
-                <Link href="/owner/slots" className="hover:text-emerald-400 transition">
-                  Slot & Maintenance Manager
+                <Link href="/owner/slots" className="hover:text-primary-container transition-colors">
+                  Slot Schedules &amp; Maintenance
                 </Link>
               </li>
               <li>
-                <Link href="/owner/facility" className="hover:text-emerald-400 transition">
-                  Facility Profile & Photos
+                <Link href="/owner/courts" className="hover:text-primary-container transition-colors">
+                  Court Inventory &amp; Pricing
                 </Link>
               </li>
             </ul>
@@ -87,30 +96,34 @@ export default function Footer() {
 
           {/* Col 4 */}
           <div>
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Contact & Support</h4>
-            <ul className="space-y-2.5 text-sm">
+            <h4 className="font-label-md text-xs font-bold text-surface uppercase tracking-wider mb-4">
+              Local HQ &amp; Support
+            </h4>
+            <ul className="space-y-2.5 font-body-sm text-sm text-tertiary-fixed">
               <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Indiranagar & HSR Layout, Bangalore</span>
+                <span className="material-symbols-outlined text-[18px] text-primary-container">location_on</span>
+                <span>Koramangala &amp; HSR Layout, Bengaluru</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="material-symbols-outlined text-[18px] text-primary-container">mail</span>
                 <span>support@quickcourt.com</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>+91 98765 43210</span>
+                <span className="material-symbols-outlined text-[18px] text-primary-container">schedule</span>
+                <span>Support Hours: 06:00 AM – 11:30 PM</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} QuickCourt Technologies Inc. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Crafted with</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>for the Sports Community</span>
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-body-sm text-xs text-tertiary-fixed">
+          <div>
+            © {new Date().getFullYear()} QuickCourt Technologies India. All rights reserved.
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="hover:text-surface transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-surface transition-colors">Terms of Service</Link>
+            <Link href="/rewards" className="hover:text-surface transition-colors">Athlete Rewards</Link>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { createApiPipeline } from '@/modules/shared/pipeline';
 import { CreateBookingSchema, BookingService } from '@/modules/core';
+import { revalidateAvailability, revalidateBookings } from '@/lib/cache';
 
 // GET /api/bookings — Fetch bookings for the logged-in user or owner
 export async function GET(request: Request) {
@@ -17,6 +18,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const filterStatus = searchParams.get('status');
     const forOwner = searchParams.get('forOwner') === 'true';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+
+    if (forOwner && user.role !== 'OWNER' && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
+    }
+    if (!forOwner && user.role !== 'USER') {
+      return NextResponse.json({ error: 'Player account required' }, { status: 403 });
+    }
 
     let where: any = {};
 
@@ -42,20 +52,35 @@ export async function GET(request: Request) {
       where.status = filterStatus;
     }
 
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        court: {
-          include: {
-            facility: true,
+    const [bookings, totalCount] = await Promise.all([
+      prisma.booking.findMany({
+        where,
+        include: {
+          court: {
+            include: {
+              facility: {
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                  city: true,
+                  images: true,
+                  sports: true,
+                  amenities: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: { id: true, name: true, email: true, phone: true, avatar: true },
           },
         },
-        user: {
-          select: { id: true, name: true, email: true, phone: true, avatar: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.booking.count({ where }),
+    ]);
 
     const formatted = bookings.map((b) => ({
       ...b,
@@ -70,7 +95,15 @@ export async function GET(request: Request) {
       },
     }));
 
-    return NextResponse.json({ bookings: formatted });
+    return NextResponse.json({
+      bookings: formatted,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
   } catch (error) {
     console.error('Fetch bookings error:', error);
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
@@ -79,7 +112,7 @@ export async function GET(request: Request) {
 
 // POST /api/bookings — Create booking using the Shared Pipeline (Zod validation, atomic transaction, overlap check)
 export const POST = createApiPipeline({
-  roles: ['USER', 'OWNER', 'ADMIN'],
+  roles: ['USER'],
   schema: CreateBookingSchema,
   transactional: true,
   audit: {

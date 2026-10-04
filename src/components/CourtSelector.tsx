@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, AlertCircle, CheckCircle2, ChevronRight, Ban } from 'lucide-react';
 import { CourtItem, SlotStatus } from '@/lib/types';
 
 interface CourtSelectorProps {
@@ -16,15 +15,34 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
   const [slots, setSlots] = useState<SlotStatus[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<SlotStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(540); // 9 mins
+
+  // 10-minute hold timer simulation
+  useEffect(() => {
+    if (!selectedSlot) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 600));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [selectedSlot]);
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Generate next 7 days for the date selector
   const availableDates = Array.from({ length: 7 }).map((_, index) => {
     const d = new Date();
     d.setDate(d.getDate() + index);
+    const dayOfWeek = d.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     return {
       dateStr: d.toISOString().split('T')[0],
       dayName: index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' }),
       formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      isWeekend,
     };
   });
 
@@ -46,195 +64,387 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
       .finally(() => setLoading(false));
   }, [selectedCourtId, selectedDate]);
 
+  // Segment slots into Morning, Afternoon, Evening
+  const morningSlots = slots.filter((s) => {
+    const hour = parseInt(s.startTime.split(':')[0], 10);
+    return hour >= 6 && hour < 12;
+  });
+
+  const afternoonSlots = slots.filter((s) => {
+    const hour = parseInt(s.startTime.split(':')[0], 10);
+    return hour >= 12 && hour < 16;
+  });
+
+  const eveningSlots = slots.filter((s) => {
+    const hour = parseInt(s.startTime.split(':')[0], 10);
+    return hour >= 16;
+  });
+
+  const renderSlotCard = (slot: SlotStatus) => {
+    const isSelected = selectedSlot?.startTime === slot.startTime;
+
+    if (slot.isBooked) {
+      return (
+        <div
+          key={slot.startTime}
+          className="p-2.5 rounded-lg bg-surface-container-highest text-on-surface-variant opacity-60 flex flex-col justify-between h-[64px] cursor-not-allowed select-none border border-outline-variant/30"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-data-mono text-data-mono">{slot.time}</span>
+            <span className="material-symbols-outlined text-[15px]">lock</span>
+          </div>
+          <span className="font-label-md text-[10px] uppercase font-bold text-on-surface-variant/80">Booked</span>
+        </div>
+      );
+    }
+
+    if (slot.isBlocked) {
+      return (
+        <div
+          key={slot.startTime}
+          title={slot.blockedReason || 'Maintenance'}
+          className="p-2.5 rounded-lg bg-secondary-fixed/50 text-on-secondary-fixed opacity-75 flex flex-col justify-between h-[64px] cursor-not-allowed select-none border border-secondary-fixed"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-data-mono text-data-mono">{slot.time}</span>
+            <span className="material-symbols-outlined text-[15px]">construction</span>
+          </div>
+          <span className="font-label-md text-[10px] uppercase font-bold truncate">
+            {slot.blockedReason || 'Blocked'}
+          </span>
+        </div>
+      );
+    }
+
+    if (isSelected) {
+      return (
+        <button
+          key={slot.startTime}
+          onClick={() => setSelectedSlot(null)}
+          type="button"
+          className="p-2.5 rounded-lg bg-primary-container text-on-primary-container ring-2 ring-primary-container shadow-md flex flex-col justify-between h-[64px] transition-transform scale-[1.02] text-left cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-data-mono text-data-mono font-bold">{slot.time}</span>
+            <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-data-mono text-data-mono font-extrabold">₹{slot.price}</span>
+            <span className="font-label-md text-[10px] uppercase font-extrabold tracking-wider">Held</span>
+          </div>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        key={slot.startTime}
+        onClick={() => setSelectedSlot(slot)}
+        type="button"
+        className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/60 hover:border-primary cursor-pointer hover:bg-surface-container-low transition-all flex flex-col justify-between h-[64px] text-left group"
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-data-mono text-data-mono font-semibold text-on-surface group-hover:text-primary">
+            {slot.time}
+          </span>
+          <span className="w-2 h-2 rounded-full bg-primary" />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="font-data-mono text-data-mono text-on-surface-variant font-medium">₹{slot.price}</span>
+          <span className="font-label-md text-[10px] uppercase font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+            Select
+          </span>
+        </div>
+      </button>
+    );
+  };
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm" id="booking-section">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-        <div>
-          <h2 className="text-xl font-black text-slate-900">Select Court & Time Slot</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Real-time court availability and instant reservation</p>
+    <div className="bg-surface-container-lowest rounded-2xl p-4 md:p-6 shadow-md border border-surface-container-high/60" id="booking-section">
+      {/* Section Title & Live Countdown Banner */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 mb-6 bg-surface-container-low p-4 rounded-xl border border-surface-container-high/40">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-inverse-surface text-primary-container flex items-center justify-center font-bold shadow-sm">
+            <span className="material-symbols-outlined text-[24px]">electric_bolt</span>
+          </div>
+          <div>
+            <h2 className="font-headline-sm text-headline-sm text-on-surface font-extrabold">Live Slot Matrix</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Real-time sync with arena sensors &amp; court access gates
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold">
-          <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Available
-          </span>
-          <span className="flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-            <span className="w-2 h-2 rounded-full bg-slate-400" /> Booked
-          </span>
-          <span className="flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-1 rounded-md">
-            <span className="w-2 h-2 rounded-full bg-amber-500" /> Blocked
-          </span>
-        </div>
+
+        {/* Lock Timer Indicator Banner */}
+        {selectedSlot ? (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-inverse-surface text-inverse-on-surface shadow-sm">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-container" />
+            </span>
+            <span className="font-data-mono text-data-mono text-primary-fixed">⚡ 1 slot held for</span>
+            <span className="font-data-mono text-data-mono font-bold text-on-primary bg-primary/40 px-2 py-0.5 rounded">
+              {formatTimer(countdown)}
+            </span>
+            <span className="font-body-sm text-body-sm text-tertiary-fixed hidden sm:inline">to avoid double-booking</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container text-on-surface-variant">
+            <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" />
+            <span className="font-label-md text-label-md font-semibold">Zero Double-Booking Guarantee</span>
+          </div>
+        )}
       </div>
 
-      {/* 1. Court Selector Tabs */}
+      {/* Step 1: Select Court Surface */}
       <div className="mb-6">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-          1. Choose Court / Arena
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-          {courts.map((court) => {
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-bold">
+            Step 1: Select Court Surface
+          </span>
+          <span className="font-body-sm text-body-sm text-primary font-semibold flex items-center gap-0.5">
+            Compare Specs <span className="material-symbols-outlined text-[14px]">info</span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          {courts.map((court, idx) => {
             const isSelected = court.id === selectedCourtId;
+            const badgeLabel = idx === 0 ? 'BWF PRO' : idx === 1 ? 'WOOD' : idx === 2 ? 'MAT' : 'STANDARD';
+
             return (
               <button
                 key={court.id}
                 onClick={() => setSelectedCourtId(court.id)}
-                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between card-hover ${
+                type="button"
+                className={`flex flex-col text-left p-3 rounded-lg shadow-sm transition-all relative overflow-hidden group ${
                   isSelected
-                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20 shadow-sm'
-                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                    ? 'bg-inverse-surface text-inverse-on-surface shadow-md'
+                    : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <span className="font-bold text-sm text-slate-900">{court.name}</span>
-                  {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 animate-scale-in" />}
-                </div>
-                <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-                  <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-medium">
-                    {court.sportType}
+                {isSelected && <div className="absolute top-0 right-0 w-2 h-full bg-primary-container" />}
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`font-headline-sm text-headline-sm font-bold truncate ${isSelected ? 'text-surface' : ''}`}>
+                    {court.name}
                   </span>
-                  <span className="font-bold text-slate-900">₹{court.pricePerHour}/hr</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded font-label-md text-[10px] font-bold ${
+                      isSelected
+                        ? 'bg-primary-container text-on-primary-container'
+                        : 'bg-surface-container-highest text-on-surface-variant'
+                    }`}
+                  >
+                    {badgeLabel}
+                  </span>
                 </div>
+                <span className={`font-body-sm text-body-sm mb-2 truncate ${isSelected ? 'text-tertiary-fixed' : 'text-on-surface-variant'}`}>
+                  {court.sportType}
+                </span>
+                <span className={`font-data-mono text-data-mono font-bold ${isSelected ? 'text-primary-fixed' : 'text-on-surface'}`}>
+                  ₹{court.pricePerHour}
+                  <span className={`font-normal text-body-sm ${isSelected ? 'text-tertiary-fixed' : 'text-on-surface-variant'}`}>
+                    /hr
+                  </span>
+                </span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* 2. Date Picker */}
+      {/* Step 2: Choose Date */}
       <div className="mb-6">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-          2. Choose Date
-        </label>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-bold">
+            Step 2: Choose Date
+          </span>
+          <div className="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+            <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+            <span>Live Schedule</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
           {availableDates.map((item) => {
             const isSelected = item.dateStr === selectedDate;
             return (
               <button
                 key={item.dateStr}
                 onClick={() => setSelectedDate(item.dateStr)}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-xl border text-center transition min-w-[90px] card-hover ${
+                type="button"
+                className={`flex flex-col items-center py-2.5 px-2 rounded-lg transition-all relative ${
                   isSelected
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                    ? 'bg-primary text-on-primary shadow-md'
+                    : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
                 }`}
               >
-                <div className={`text-[11px] font-bold ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`}>
+                <span
+                  className={`font-label-md text-label-md uppercase tracking-wider font-semibold ${
+                    isSelected
+                      ? 'text-primary-fixed'
+                      : item.isWeekend
+                      ? 'text-secondary font-bold'
+                      : 'text-on-surface-variant'
+                  }`}
+                >
                   {item.dayName}
-                </div>
-                <div className="text-sm font-extrabold">{item.formattedDate}</div>
+                </span>
+                <span className="font-headline-sm text-headline-sm font-bold">{item.formattedDate}</span>
+                <span
+                  className={`font-body-sm text-[11px] ${
+                    isSelected
+                      ? 'text-on-primary/80'
+                      : item.isWeekend
+                      ? 'text-secondary font-semibold'
+                      : 'text-on-surface-variant'
+                  }`}
+                >
+                  {item.isWeekend ? 'Peak Days' : 'Regular'}
+                </span>
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                    isSelected
+                      ? 'bg-primary-container'
+                      : item.isWeekend
+                      ? 'bg-secondary'
+                      : 'bg-transparent'
+                  }`}
+                />
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* 3. Slot Grid */}
-      <div className="mb-6">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-          3. Select 1-Hour Time Slot
-        </label>
-
-        {loading ? (
-          <div className="py-12 text-center text-slate-400 text-sm animate-pulse">
-            Checking real-time slot availability...
+      {/* Color Legend Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-surface-container-low mb-6 font-label-md text-label-md border border-surface-container-high/40">
+        <span className="font-semibold text-on-surface">Slot Status:</span>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded bg-surface-container-lowest shadow-sm flex items-center justify-center border border-outline-variant/40">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            </span>
+            <span className="text-on-surface-variant">Available</span>
           </div>
-        ) : slots.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 text-sm bg-slate-50 rounded-xl">
-            No operating slots available for this court today.
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+              <span className="material-symbols-outlined text-[10px] font-bold">check</span>
+            </span>
+            <span className="text-on-surface font-bold">Selected (Held)</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-            {slots.map((slot) => {
-              const isSelected = selectedSlot?.startTime === slot.startTime;
-
-              if (slot.isBooked) {
-                return (
-                  <div
-                    key={slot.startTime}
-                    className="p-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60 flex flex-col justify-between"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold line-through">{slot.time}</span>
-                      <Ban className="w-3.5 h-3.5 text-slate-400" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase mt-1">Booked</span>
-                  </div>
-                );
-              }
-
-              if (slot.isBlocked) {
-                return (
-                  <div
-                    key={slot.startTime}
-                    title={slot.blockedReason || 'Maintenance'}
-                    className="p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 cursor-not-allowed opacity-75 flex flex-col justify-between"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">{slot.time}</span>
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-amber-700 truncate mt-1">
-                      {slot.blockedReason || 'Blocked'}
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <button
-                  key={slot.startTime}
-                  onClick={() => setSelectedSlot(slot)}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col justify-between group card-hover ${
-                    isSelected
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                      : 'bg-white hover:border-emerald-500 border-slate-200 text-slate-800 hover:bg-emerald-50/30'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold">{slot.time}</span>
-                    <Clock className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-emerald-600'}`} />
-                  </div>
-                  <div className="mt-1 flex items-center justify-between">
-                    <span className={`text-xs font-extrabold ${isSelected ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                      ₹{slot.price}
-                    </span>
-                    <span className={`text-[10px] font-semibold uppercase ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                      Available
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
+              <span className="material-symbols-outlined text-[10px]">lock</span>
+            </span>
+            <span className="text-on-surface-variant">Booked</span>
           </div>
-        )}
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+              <span className="material-symbols-outlined text-[10px]">construction</span>
+            </span>
+            <span className="text-on-surface-variant">Blocked / Academy</span>
+          </div>
+        </div>
       </div>
 
-      {/* 4. Action / Price Confirmation Box */}
+      {/* Slot Matrix Segments */}
+      {loading ? (
+        <div className="py-16 text-center text-tertiary text-sm animate-pulse space-y-2">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto" />
+          <p className="font-semibold">Syncing real-time court availability matrix...</p>
+        </div>
+      ) : slots.length === 0 ? (
+        <div className="py-12 text-center text-on-surface-variant bg-surface-container-low rounded-xl border border-surface-container-high">
+          No operating slots scheduled for this court on the selected date.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Morning */}
+          {morningSlots.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-on-surface">
+                <span className="material-symbols-outlined text-primary text-[18px]">wb_sunny</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold">Morning Slots</h3>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">(06:00 AM – 12:00 PM)</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {morningSlots.map(renderSlotCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Afternoon */}
+          {afternoonSlots.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-on-surface">
+                <span className="material-symbols-outlined text-secondary text-[18px]">wb_twilight</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold">Afternoon Slots</h3>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">(12:00 PM – 04:00 PM)</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {afternoonSlots.map(renderSlotCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Evening Peak */}
+          {eveningSlots.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-on-surface">
+                <span className="material-symbols-outlined text-secondary-container text-[18px]">nightlight</span>
+                <h3 className="font-headline-sm text-headline-sm font-bold">Evening Peak Slots</h3>
+                <span className="font-body-sm text-body-sm text-secondary font-semibold">
+                  (04:00 PM – 11:30 PM • Floodlit)
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {eveningSlots.map(renderSlotCard)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sticky Bottom Booking Bar */}
       {selectedSlot && selectedCourt && (
-        <div className="p-4 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2">
-          <div>
-            <div className="text-xs text-slate-400">Booking Summary</div>
-            <div className="font-bold text-sm text-white">
-              {selectedCourt.name} • {selectedDate} ({selectedSlot.time})
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-container-high shadow-2xl p-4 transition-all animate-in slide-in-from-bottom-4">
+          <div className="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                <span className="material-symbols-outlined text-[20px]">check</span>
+              </div>
+              <div>
+                <div className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
+                  {selectedCourt.name} • {selectedSlot.time}
+                </div>
+                <div className="flex items-center gap-2 font-body-sm text-body-sm text-tertiary">
+                  <span className="text-primary font-semibold">⚡ 10-min Cart Reservation Active</span>
+                  <span>•</span>
+                  <span>Date: {selectedDate}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-xs text-emerald-400 font-medium mt-0.5">
-              Instant Confirmation • Free cancellation up to 2 hrs before
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="text-right">
-              <span className="text-[10px] text-slate-400 block uppercase font-bold">Total Amount</span>
-              <span className="text-xl font-black text-white">₹{selectedSlot.price}</span>
-            </div>
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="text-right">
+                <span className="font-label-md text-[11px] uppercase font-bold text-tertiary tracking-wider block">
+                  Total (Taxes Included)
+                </span>
+                <div className="font-display text-2xl font-black text-on-surface tnum">
+                  ₹{selectedSlot.price}
+                </div>
+              </div>
 
-            <button
-              onClick={() => onProceedToBooking(selectedCourt, selectedSlot, selectedDate)}
-              className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 shrink-0"
-            >
-              <span>Proceed to Pay</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <button
+                onClick={() => onProceedToBooking(selectedCourt, selectedSlot, selectedDate)}
+                type="button"
+                className="px-6 py-3 rounded-lg bg-secondary-container hover:bg-secondary-container/90 active:scale-[0.98] text-on-secondary font-label-lg text-label-lg font-bold shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span>Proceed to Instant Checkout</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

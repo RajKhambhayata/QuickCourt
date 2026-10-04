@@ -10,9 +10,10 @@ export async function GET() {
     return NextResponse.json({ user: null });
   }
 
-  const bookingsCount = await prisma.booking.count({
-    where: { userId: user.id },
-  });
+  const bookingsCount =
+    user.role === 'USER'
+      ? await prisma.booking.count({ where: { userId: user.id } })
+      : 0;
 
   return NextResponse.json({
     user: {

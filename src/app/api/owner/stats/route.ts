@@ -1,23 +1,28 @@
-export const dynamic = 'force-dynamic';
-
+import { unstable_cache } from 'next/cache';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { requireRole } from '@/lib/require-role';
+import { revalidateOwnerStats } from '@/lib/cache';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-    if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    const guard = await requireRole(['OWNER']);
+    if (guard.error) return guard.error;
+    const user = guard.user;
 
     // Facilities owned by this user
-    const facilities = await prisma.facility.findMany({
-      where: user.role === 'ADMIN' ? {} : { ownerId: user.id },
-      include: {
-        courts: true,
-      },
-    });
+    const facilities = await unstable_cache(
+      () => prisma.facility.findMany({
+        where: { ownerId: user.id },
+        include: {
+          courts: { select: { id: true, name: true, sportType: true, isActive: true, pricePerHour: true } },
+        },
+      }),
+      [`owner-facilities-${user.id}`],
+      { revalidate: 60, tags: [`owner-stats-${user.id}`] }
+    )();
 
     const facilityIds = facilities.map((f) => f.id);
     const courtIds = facilities.flatMap((f) => f.courts.map((c) => c.id));
@@ -25,21 +30,79 @@ export async function GET() {
     // Active courts count
     const totalActiveCourts = facilities.flatMap((f) => f.courts).filter((c) => c.isActive).length;
 
-    // All bookings
-    const bookings = await prisma.booking.findMany({
-      where: {
-        courtId: { in: courtIds },
-      },
-      include: {
-        court: true,
-        user: { select: { name: true, email: true, phone: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Use aggregation for KPIs instead of fetching all bookings
+    const [totalBookingsCount, totalEarningsResult, bookingTrendsRaw, peakHoursRaw, todaysBookings] = await Promise.all([
+      unstable_cache(
+        () => prisma.booking.count({
+          where: {
+            courtId: { in: courtIds },
+            status: { not: 'CANCELLED' },
+          },
+        }),
+        [`owner-bookings-count-${user.id}`],
+        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
+      )(),
+      unstable_cache(
+        () => prisma.booking.aggregate({
+          _sum: { totalAmount: true },
+          where: {
+            courtId: { in: courtIds },
+            status: { not: 'CANCELLED' },
+          },
+        }),
+        [`owner-earnings-${user.id}`],
+        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
+      )(),
+      // Booking trends - aggregate only
+      unstable_cache(
+        () => prisma.booking.groupBy({
+          by: ['date'],
+          _count: { id: true },
+          _sum: { totalAmount: true },
+          where: {
+            courtId: { in: courtIds },
+            status: { not: 'CANCELLED' },
+            date: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            },
+          },
+        }),
+        [`owner-trends-${user.id}`],
+        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
+      )(),
+      // Peak hours - aggregate only
+      unstable_cache(
+        () => prisma.booking.groupBy({
+          by: ['startTime'],
+          _count: { id: true },
+          where: {
+            courtId: { in: courtIds },
+            status: { not: 'CANCELLED' },
+          },
+        }),
+        [`owner-peak-hours-${user.id}`],
+        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
+      )(),
+      // Today's bookings - limited to 20, shorter cache
+      unstable_cache(
+        () => prisma.booking.findMany({
+          where: {
+            courtId: { in: courtIds },
+            date: new Date().toISOString().split('T')[0],
+          },
+          include: {
+            court: { select: { name: true, sportType: true } },
+            user: { select: { name: true, phone: true } },
+          },
+          orderBy: { startTime: 'asc' },
+          take: 20,
+        }),
+        [`owner-today-${user.id}`],
+        { revalidate: 10, tags: [`owner-stats-${user.id}`] }
+      )(),
+    ]);
 
-    const confirmedBookings = bookings.filter((b) => b.status !== 'CANCELLED');
-    const totalBookingsCount = confirmedBookings.length;
-    const totalEarnings = confirmedBookings.reduce((acc, b) => acc + b.totalAmount, 0);
+    const totalEarnings = totalEarningsResult._sum.totalAmount || 0;
 
     // 1. Daily/Weekly trends (last 7 days)
     const daysMap: Record<string, { date: string; day: string; bookings: number; revenue: number }> = {};
@@ -53,24 +116,35 @@ export async function GET() {
       daysMap[dateStr] = { date: dateStr, day: dayName, bookings: 0, revenue: 0 };
     }
 
-    confirmedBookings.forEach((b) => {
-      if (daysMap[b.date]) {
-        daysMap[b.date].bookings += 1;
-        daysMap[b.date].revenue += b.totalAmount;
+    bookingTrendsRaw.forEach((bt: any) => {
+      if (daysMap[bt.date]) {
+        daysMap[bt.date].bookings += bt._count?.id || 0;
+        daysMap[bt.date].revenue += bt._sum?.totalAmount || 0;
       }
     });
 
     const bookingTrends = Object.values(daysMap);
 
-    // 2. Earnings & Bookings summary by Sport / Court
+    // 2. Earnings & Bookings summary by Sport / Court - use aggregation
+    const sportEarningsRaw = await prisma.booking.groupBy({
+      by: ['courtId'],
+      _count: { id: true },
+      _sum: { totalAmount: true },
+      where: {
+        courtId: { in: courtIds },
+        status: { not: 'CANCELLED' },
+      },
+    });
+
     const sportEarningsMap: Record<string, { sport: string; revenue: number; bookings: number }> = {};
-    confirmedBookings.forEach((b) => {
-      const sport = b.court.sportType || 'Other';
+    sportEarningsRaw.forEach((se) => {
+      const court = facilities.flatMap(f => f.courts).find(c => c.id === se.courtId);
+      const sport = court?.sportType || 'Other';
       if (!sportEarningsMap[sport]) {
         sportEarningsMap[sport] = { sport, revenue: 0, bookings: 0 };
       }
-      sportEarningsMap[sport].revenue += b.totalAmount;
-      sportEarningsMap[sport].bookings += 1;
+      sportEarningsMap[sport].revenue += se._sum.totalAmount || 0;
+      sportEarningsMap[sport].bookings += se._count.id;
     });
     const earningsSummary = Object.values(sportEarningsMap);
 
@@ -82,29 +156,26 @@ export async function GET() {
       hourMap[hStr] = { hour: hStr, label, count: 0 };
     }
 
-    confirmedBookings.forEach((b) => {
-      if (hourMap[b.startTime]) {
-        hourMap[b.startTime].count += 1;
+    peakHoursRaw.forEach((ph: any) => {
+      if (hourMap[ph.startTime]) {
+        hourMap[ph.startTime].count += ph._count?.id || 0;
       }
     });
 
     const peakHours = Object.values(hourMap);
 
     // 4. Upcoming today bookings for calendar / schedule
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todaysBookings = bookings
-      .filter((b) => b.date === todayStr)
-      .map((b) => ({
-        id: b.id,
-        bookingNumber: b.bookingNumber,
-        courtName: b.court.name,
-        sportType: b.court.sportType,
-        userName: b.user.name,
-        userPhone: b.user.phone,
-        time: `${b.startTime} - ${b.endTime}`,
-        status: b.status,
-        amount: b.totalAmount,
-      }));
+    const formattedTodaysBookings = todaysBookings.map((b) => ({
+      id: b.id,
+      bookingNumber: b.bookingNumber,
+      courtName: b.court.name,
+      sportType: b.court.sportType,
+      userName: b.user.name,
+      userPhone: b.user.phone,
+      time: `${b.startTime} - ${b.endTime}`,
+      status: b.status,
+      amount: b.totalAmount,
+    }));
 
     return NextResponse.json({
       kpis: {
@@ -116,7 +187,7 @@ export async function GET() {
       bookingTrends,
       earningsSummary,
       peakHours,
-      todaysBookings,
+      todaysBookings: formattedTodaysBookings,
       facilities,
     });
   } catch (error) {

@@ -20,9 +20,10 @@ export const CreateCourtSchema = z.object({
   name: z.string().trim().min(2, 'Court name is required'),
   sportType: z.string().min(2, 'Sport type is required'),
   surfaceType: z.string().default('Synthetic'),
-  pricePerHour: z.number().positive('Price per hour must be greater than zero'),
-  operatingStartHour: z.number().int().min(0).max(23).default(6),
-  operatingEndHour: z.number().int().min(1).max(24).default(23),
+  // coerce handles form payloads where numbers arrive as strings
+  pricePerHour: z.coerce.number().positive('Price per hour must be greater than zero'),
+  operatingStartHour: z.coerce.number().int().min(0).max(23).default(6),
+  operatingEndHour: z.coerce.number().int().min(1).max(24).default(23),
 });
 
 export type CreateCourtInput = z.infer<typeof CreateCourtSchema>;

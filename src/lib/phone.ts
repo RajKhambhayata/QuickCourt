@@ -5,7 +5,16 @@ export function normalizePhoneNumber(value: unknown): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  // Accept common formatting characters, but require an explicit international prefix.
+  // Accept international formats and common local numbers
   const normalized = trimmed.replace(/[\s().-]/g, '');
-  return /^\+[1-9]\d{7,14}$/.test(normalized) ? normalized : null;
+  if (/^\+[1-9]\d{7,14}$/.test(normalized)) {
+    return normalized;
+  }
+  if (/^\d{10}$/.test(normalized)) {
+    return `+91${normalized}`;
+  }
+  if (/^\d{7,15}$/.test(normalized)) {
+    return `+${normalized}`;
+  }
+  return normalized.length >= 7 ? normalized : null;
 }

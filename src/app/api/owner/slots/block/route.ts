@@ -1,16 +1,17 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { requireRole } from '@/lib/require-role';
 import { createApiPipeline, assertOwnsFacility } from '@/modules/shared/pipeline';
 import { BlockSlotSchema, VenuesService } from '@/modules/core';
 
 // GET /api/owner/slots/block — list blocked slots for a court
 export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    const guard = await requireRole(['OWNER']);
+    if (guard.error) return guard.error;
+    const user = guard.user;
 
     const { searchParams } = new URL(request.url);
     const courtId = searchParams.get('courtId');
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
 
 // POST /api/owner/slots/block — block a slot using Shared Pipeline
 export const POST = createApiPipeline({
-  roles: ['OWNER', 'ADMIN'],
+  roles: ['OWNER'],
   allowPendingOwner: false,
   schema: BlockSlotSchema,
   transactional: true,
@@ -76,10 +77,9 @@ export const POST = createApiPipeline({
 // DELETE /api/owner/slots/block?id=<blockedSlotId> — unblock a slot
 export async function DELETE(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    const guard = await requireRole(['OWNER']);
+    if (guard.error) return guard.error;
+    const user = guard.user;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

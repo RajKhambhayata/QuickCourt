@@ -114,15 +114,65 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Text gradients */
 .text-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #00e676 0%, #00b359 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-warm {
-  background: linear-gradient(135deg, #f97316 0%, #e11d48 100%);
+  background: linear-gradient(135deg, #fe6b00 0%, #ffdbcc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Kinetic Kineticist Utility Tokens */
+.tnum, [class*="font-data-mono"] {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+  display: inline-block;
+}
+
+.material-symbols-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Kinetic Athletic Button Tokens */
+.btn-blaze {
+  background: #fe6b00;
+  color: #ffffff;
+  transition: all 0.15s ease-out;
+}
+.btn-blaze:hover {
+  background: #e05e00;
+}
+.btn-blaze:active {
+  transform: scale(0.98);
+}
+
+.btn-volt {
+  background: #00e676;
+  color: #0b1c30;
+  transition: all 0.15s ease-out;
+}
+.btn-volt:hover {
+  background: #00c864;
+}
+.btn-volt:active {
+  transform: scale(0.98);
 }

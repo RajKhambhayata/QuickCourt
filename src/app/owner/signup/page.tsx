@@ -135,18 +135,18 @@ export default function OwnerSignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {[
-              { label: 'Owner Name', value: name, setter: setName, type: 'text', placeholder: 'Your full name', Icon: User },
-              { label: 'Business Email', value: email, setter: setEmail, type: 'email', placeholder: 'owner@yourarena.com', Icon: Mail },
-              { label: 'Contact Phone (International)', value: phone, setter: setPhone, type: 'tel', placeholder: '+919876543210', Icon: Phone },
-              { label: 'Password (min 8 chars)', value: password, setter: setPassword, type: 'password', placeholder: '••••••••', Icon: Lock },
-            ].map(({ label, value, setter, type, placeholder, Icon }) => (
+              { label: 'Owner Name', value: name, setter: setName, type: 'text', placeholder: 'Your full name', Icon: User, required: true },
+              { label: 'Business Email', value: email, setter: setEmail, type: 'email', placeholder: 'owner@yourarena.com', Icon: Mail, required: true },
+              { label: 'Contact Phone (Optional)', value: phone, setter: setPhone, type: 'tel', placeholder: '+919876543210', Icon: Phone, required: false },
+              { label: 'Password (min 8 chars)', value: password, setter: setPassword, type: 'password', placeholder: '••••••••', Icon: Lock, required: true },
+            ].map(({ label, value, setter, type, placeholder, Icon, required }) => (
               <div key={label}>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{label}</label>
                 <div className="relative">
                   <Icon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={type}
-                    required
+                    required={required}
                     value={value}
                     onChange={(e) => setter(e.target.value)}
                     placeholder={placeholder}

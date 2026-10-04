@@ -89,18 +89,18 @@ function VenuesContent() {
   const displayedVenues = venues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-6">
       {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Sports Facilities & Clubs</span>
+          <div className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+            <span className="material-symbols-outlined text-[16px] text-primary">sports_tennis</span>
+            <span>Sports Facilities &amp; Clubs</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight mt-1 font-display">
-            Find & Book Sports Venues
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mt-1 font-headline-lg">
+            Find &amp; Book Sports Venues
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-tertiary mt-1">
             Showing {venues.length} approved courts and turfs ready for immediate booking
           </p>
         </div>
@@ -108,27 +108,29 @@ function VenuesContent() {
         {/* Search bar */}
         <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 max-w-md w-full">
           <div className="flex-1 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <span className="material-symbols-outlined text-[18px] text-tertiary absolute left-3.5 top-1/2 -translate-y-1/2">
+              search
+            </span>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search venue name, location..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-surface-container-high rounded-xl text-xs text-on-surface placeholder-tertiary focus:outline-none focus:border-primary shadow-sm"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-500/25"
+            className="px-5 py-2.5 bg-primary-container hover:bg-inverse-primary active:scale-95 text-on-primary-container rounded-xl text-xs font-bold transition shadow-sm"
           >
             Search
           </button>
           <button
             type="button"
             onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-            className="md:hidden p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600"
+            className="md:hidden p-2.5 bg-surface-container border border-surface-container-high rounded-xl text-on-surface"
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[20px]">tune</span>
           </button>
         </form>
       </div>

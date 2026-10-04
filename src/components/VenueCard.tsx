@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Star, Sparkles, ArrowRight, Clock, Shield, Trophy } from 'lucide-react';
 import { FacilityWithDetails } from '@/lib/types';
 
 export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
@@ -9,117 +8,89 @@ export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
       ? venue.images[0]
       : 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600';
 
-  const getSportColor = (sport: string) => {
-    const colors: Record<string, string> = {
-      'Badminton': 'bg-emerald-500',
-      'Cricket': 'bg-teal-500',
-      'Tennis': 'bg-blue-500',
-      'Football': 'bg-orange-500',
-      'Basketball': 'bg-rose-500',
-      'Volleyball': 'bg-purple-500',
-      'Pickleball': 'bg-cyan-500',
-      'Squash': 'bg-indigo-500',
-    };
-    return colors[sport] || 'bg-emerald-500';
-  };
+  const primarySport = venue.sports && venue.sports.length > 0 ? venue.sports[0] : 'Sports';
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col overflow-hidden card-hover">
-      {/* Image Thumbnail */}
-      <div className="relative h-56 w-full overflow-hidden bg-slate-100">
-        <img
-          src={thumbnail}
-          alt={venue.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+    <div className="rounded-2xl bg-surface-container-lowest border border-surface-container-high/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
+      <div>
+        {/* Image Container with Scrim & Badges */}
+        <div className="relative h-48 w-full overflow-hidden bg-surface-container">
+          <img
+            src={thumbnail}
+            alt={venue.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-on-background/85 via-transparent to-black/30" />
 
-        {/* Rating Badge */}
-        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg text-xs font-bold text-slate-900">
-          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-          <span>{venue.avgRating ? venue.avgRating.toFixed(1) : '5.0'}</span>
-          <span className="text-slate-400 font-normal">({venue.totalReviews || 0})</span>
+          {/* Pill sport tag */}
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-body-sm font-bold flex items-center gap-1 shadow-sm">
+            <span className="material-symbols-outlined text-[14px] text-primary-container">sports_tennis</span>
+            <span>{primarySport}</span>
+          </div>
+
+          {/* Distance & Rating badge */}
+          <div className="absolute top-3 right-3 px-2 py-1 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-body-sm font-bold flex items-center gap-1 shadow-sm">
+            <span className="material-symbols-outlined text-[14px] text-secondary-container material-symbols-fill">star</span>
+            <span>{venue.avgRating ? venue.avgRating.toFixed(1) : '4.9'}</span>
+          </div>
+
+          {/* Bottom verified indicator & proximity */}
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-inverse-on-surface">
+            <span className="font-label-md text-body-sm flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px] text-primary-fixed">verified</span>
+              <span>{venue.venueType || 'Verified Facility'}</span>
+            </span>
+            <span className="font-data-mono text-body-sm text-primary-fixed font-bold">
+              2.1 km away
+            </span>
+          </div>
         </div>
 
-        {/* Venue Type Tag */}
-        <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] font-semibold text-white tracking-wide flex items-center gap-1.5">
-          <Shield className="w-3 h-3 text-emerald-400" />
-          <span>{venue.venueType || 'Verified'}</span>
-        </div>
+        {/* Body Meta */}
+        <div className="p-4 space-y-2">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-bold truncate">
+            {venue.name}
+          </h3>
 
-        {/* Sports tags inside image bottom */}
-        <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2">
-          {venue.sports.slice(0, 3).map((sport) => (
-            <span
-              key={sport}
-              className={`${getSportColor(sport)} backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md`}
-            >
-              {sport}
-            </span>
-          ))}
-          {venue.sports.length > 3 && (
-            <span className="bg-slate-800/90 text-white text-[11px] font-bold px-2 py-1 rounded-full shadow-md">
-              +{venue.sports.length - 3}
-            </span>
-          )}
+          <p className="font-body-sm text-body-sm text-tertiary flex items-center gap-1 truncate">
+            <span className="material-symbols-outlined text-[16px] text-primary">location_on</span>
+            <span className="truncate">{venue.address}, {venue.city}</span>
+          </p>
+
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {venue.courts && venue.courts.length > 0 && (
+              <span className="px-2 py-0.5 rounded bg-surface-container font-label-md text-[11px] text-on-surface-variant font-medium">
+                {venue.courts.length} Courts
+              </span>
+            )}
+            {venue.amenities && venue.amenities.slice(0, 2).map((a) => (
+              <span key={a} className="px-2 py-0.5 rounded bg-surface-container font-label-md text-[11px] text-on-surface-variant font-medium">
+                {a}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-lg text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1 font-display">
-              {venue.name}
-            </h3>
-            <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-              <Trophy className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold">Top Rated</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="truncate">{venue.address}, {venue.city}</span>
-          </div>
-
-          <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">
-            {venue.description}
-          </p>
-
-          {/* Quick info badges */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
-              <Clock className="w-3.5 h-3.5 text-blue-500" />
-              <span>Real-time Slots</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-              <span>Instant Booking</span>
-            </div>
+      {/* Footer Info & Conversion Button */}
+      <div className="p-4 pt-2 border-t border-surface-container-high/40 flex items-center justify-between mt-auto">
+        <div>
+          <span className="font-label-md text-[11px] uppercase font-bold text-tertiary tracking-wider block">
+            Starts from
+          </span>
+          <div className="font-headline-sm text-headline-sm text-on-surface font-extrabold tnum">
+            ₹{venue.minPrice || 400}
+            <span className="text-body-sm font-normal text-tertiary">/hr</span>
           </div>
         </div>
 
-        {/* Footer info & CTA */}
-        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">
-              Starting from
-            </span>
-            <div className="text-slate-900 font-extrabold text-lg">
-              ₹{venue.minPrice || 400}
-              <span className="text-xs font-normal text-slate-500">/hr</span>
-            </div>
-          </div>
-
-          <Link
-            href={`/venues/${venue.id}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40"
-          >
-            <span>Book Now</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+        <Link
+          href={`/venues/${venue.id}`}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary-container hover:bg-secondary-container/90 active:scale-[0.98] text-on-secondary font-label-lg text-label-lg font-bold shadow-sm transition-all"
+        >
+          <span>Book Slot</span>
+          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        </Link>
       </div>
     </div>
   );

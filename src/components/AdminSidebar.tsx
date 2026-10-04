@@ -8,7 +8,6 @@ import {
   Building2,
   Users,
   ShieldAlert,
-  ArrowLeft,
   UserCheck,
   UserCog,
 } from 'lucide-react';
@@ -68,15 +67,6 @@ export default function AdminSidebar() {
         </nav>
       </div>
 
-      <div className="pt-6 border-t border-slate-800">
-        <Link
-          href="/venues"
-          className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Player View</span>
-        </Link>
-      </div>
     </aside>
   );
 }

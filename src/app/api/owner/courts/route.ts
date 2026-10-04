@@ -1,27 +1,26 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { requireRole } from '@/lib/require-role';
 import { createApiPipeline, assertOwnsFacility } from '@/modules/shared/pipeline';
 import { CreateCourtSchema, VenuesService } from '@/modules/core';
 
 export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser();
-    if (!user || (user.role !== 'OWNER' && user.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    const guard = await requireRole(['OWNER']);
+    if (guard.error) return guard.error;
+    const user = guard.user;
 
     const { searchParams } = new URL(request.url);
     const facilityId = searchParams.get('facilityId');
 
     const where: any = {};
     if (facilityId) {
-      if (user.role !== 'ADMIN') {
-        const ownership = await assertOwnsFacility(user, facilityId);
-        if (ownership.error) return NextResponse.json({ error: ownership.error }, { status: ownership.status || 403 });
-      }
+      const ownership = await assertOwnsFacility(user, facilityId);
+      if (ownership.error) return NextResponse.json({ error: ownership.error }, { status: ownership.status || 403 });
       where.facilityId = facilityId;
-    } else if (user.role !== 'ADMIN') {
+    } else {
       where.facility = { ownerId: user.id };
     }
 
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
 
 // POST /api/owner/courts — Add court using Shared Pipeline
 export const POST = createApiPipeline({
-  roles: ['OWNER', 'ADMIN'],
+  roles: ['OWNER'],
   allowPendingOwner: false,
   facilityId: (ctx) => ctx.body?.facilityId, // Asserts facility ownership
   schema: CreateCourtSchema,

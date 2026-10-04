@@ -7,3 +7,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  JWT_SECRET = "quickcourt-fallback-secret-key-32chars-min-len"

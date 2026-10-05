@@ -7,6 +7,7 @@ import prisma from '@/lib/prisma';
 import { FacilityWithDetails } from '@/lib/types';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getFeaturedVenues(): Promise<{ venues: FacilityWithDetails[]; error: string | null }> {

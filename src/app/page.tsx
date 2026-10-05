@@ -5,10 +5,11 @@ import SportsCategoryPills from '@/components/SportsCategoryPills';
 import VenueCard from '@/components/VenueCard';
 import prisma from '@/lib/prisma';
 import { FacilityWithDetails } from '@/lib/types';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const revalidate = 0;
 
-async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
+async function getFeaturedVenues(): Promise<{ venues: FacilityWithDetails[]; error: string | null }> {
   try {
     const venues = await prisma.facility.findMany({
       where: { status: 'APPROVED' },
@@ -21,7 +22,7 @@ async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
       orderBy: { createdAt: 'desc' },
     });
 
-    return venues.map((f) => {
+    const formattedVenues = venues.map((f) => {
       let parsedImages: string[] = [];
       let parsedSports: string[] = [];
       let parsedAmenities: string[] = [];
@@ -60,14 +61,16 @@ async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
         minPrice,
       };
     }) as unknown as FacilityWithDetails[];
+
+    return { venues: formattedVenues, error: null };
   } catch (error) {
     console.error('[getFeaturedVenues] Database query failed:', error);
-    return [];
+    return { venues: [], error: error instanceof Error ? error.message : 'Failed to load venues' };
   }
 }
 
 export default async function HomePage() {
-  const venues = await getFeaturedVenues();
+  const { venues, error: venuesError } = await getFeaturedVenues();
 
   return (
     <div className="space-y-0 pb-20 bg-background text-on-surface">
@@ -195,7 +198,20 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {venues.length === 0 ? (
+        {venuesError ? (
+          <div className="text-center py-16 bg-surface-container-lowest rounded-2xl border border-error-container">
+            <AlertCircle className="w-12 h-12 text-error mx-auto mb-3" />
+            <p className="text-on-surface font-semibold mb-2">Unable to load venues</p>
+            <p className="text-sm text-tertiary mb-4">{venuesError}</p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-sm font-bold hover:bg-inverse-primary transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </Link>
+          </div>
+        ) : venues.length === 0 ? (
           <div className="text-center py-16 bg-surface-container-lowest rounded-2xl border border-surface-container-high">
             <span className="material-symbols-outlined text-4xl text-outline mb-2">stadium</span>
             <p className="text-on-surface font-semibold">No approved arenas available at the moment.</p>

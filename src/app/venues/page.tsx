@@ -1,349 +1,369 @@
-'use client';
-
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React from 'react';
+import Link from 'next/link';
+import type { Metadata } from 'next';
 import VenueCard from '@/components/VenueCard';
 import SportsCategoryPills from '@/components/SportsCategoryPills';
+import VenuesFilterSidebar from './VenuesFilterSidebar';
+import prisma from '@/lib/prisma';
 import { FacilityWithDetails } from '@/lib/types';
-import { SPORTS_LIST, CITIES_LIST } from '@/lib/constants';
 import {
-  Search,
-  SlidersHorizontal,
-  Star,
-  MapPin,
-  Sparkles,
+  normalizeSportSlug,
+  getSportDbSearchTerms,
+  getCityDbSearchTerms,
+  getSportName,
+} from '@/lib/constants';
+import {
   Building2,
+  AlertCircle,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react';
 
-function VenuesContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  // Filter states initialized from URL
-  const initialSport = searchParams.get('sport') || 'All';
-  const initialCity = searchParams.get('city') || 'All';
-  const initialSearch = searchParams.get('search') || '';
-  const initialVenueType = searchParams.get('venueType') || 'All';
-  const initialRating = searchParams.get('minRating') || '0';
-  const initialMaxPrice = searchParams.get('maxPrice') || '2000';
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}): Promise<Metadata> {
+  const sportParam = typeof searchParams?.sport === 'string' ? searchParams.sport : undefined;
+  const cityParam = typeof searchParams?.city === 'string' ? searchParams.city : undefined;
 
-  const [venues, setVenues] = useState<FacilityWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sport, setSport] = useState(initialSport);
-  const [city, setCity] = useState(initialCity);
-  const [search, setSearch] = useState(initialSearch);
-  const [venueType, setVenueType] = useState(initialVenueType);
-  const [minRating, setMinRating] = useState(initialRating);
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const sportName = sportParam ? getSportName(sportParam) : '';
+  const titlePrefix = sportName && sportName !== 'All Sports' ? `${sportName} Venues` : 'Find & Book Sports Venues';
+  const locationSuffix = cityParam && cityParam !== 'All' ? ` in ${cityParam}` : '';
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
-
-  const fetchVenues = () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (sport !== 'All') params.set('sport', sport);
-    if (city !== 'All') params.set('city', city);
-    if (search.trim()) params.set('search', search.trim());
-    if (venueType !== 'All') params.set('venueType', venueType);
-    if (parseFloat(minRating) > 0) params.set('minRating', minRating);
-    if (parseFloat(maxPrice) < 5000) params.set('maxPrice', maxPrice);
-
-    fetch(`/api/venues?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.facilities) {
-          setVenues(data.facilities);
-          setCurrentPage(1);
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+  return {
+    title: `${titlePrefix}${locationSuffix} | QuickCourt`,
+    description: `Browse verified ${sportName || 'sports'} arenas, floodlit turfs, and indoor courts${locationSuffix} available for instant slot booking on QuickCourt.`,
+    openGraph: {
+      title: `${titlePrefix}${locationSuffix} | QuickCourt`,
+      description: `Browse verified ${sportName || 'sports'} arenas, floodlit turfs, and indoor courts${locationSuffix}.`,
+      type: 'website',
+    },
   };
-
-  useEffect(() => {
-    fetchVenues();
-  }, [sport, city, venueType, minRating, maxPrice]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchVenues();
-  };
-
-  const handleResetFilters = () => {
-    setSport('All');
-    setCity('All');
-    setSearch('');
-    setVenueType('All');
-    setMinRating('0');
-    setMaxPrice('5000');
-  };
-
-  // Pagination slices
-  const totalPages = Math.ceil(venues.length / itemsPerPage);
-  const displayedVenues = venues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  return (
-    <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-6">
-      {/* Header */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px] text-primary">sports_tennis</span>
-            <span>Sports Facilities &amp; Clubs</span>
-          </div>
-          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mt-1 font-headline-lg">
-            Find &amp; Book Sports Venues
-          </h1>
-          <p className="text-xs text-tertiary mt-1">
-            Showing {venues.length} approved courts and turfs ready for immediate booking
-          </p>
-        </div>
-
-        {/* Search bar */}
-        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 max-w-md w-full">
-          <div className="flex-1 relative">
-            <span className="material-symbols-outlined text-[18px] text-tertiary absolute left-3.5 top-1/2 -translate-y-1/2">
-              search
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search venue name, location..."
-              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-surface-container-high rounded-xl text-xs text-on-surface placeholder-tertiary focus:outline-none focus:border-primary shadow-sm"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-5 py-2.5 bg-primary-container hover:bg-inverse-primary active:scale-95 text-on-primary-container rounded-xl text-xs font-bold transition shadow-sm"
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-            className="md:hidden p-2.5 bg-surface-container border border-surface-container-high rounded-xl text-on-surface"
-          >
-            <span className="material-symbols-outlined text-[20px]">tune</span>
-          </button>
-        </form>
-      </div>
-
-      {/* Sports Category Pills */}
-      <div className="mb-8">
-        <SportsCategoryPills />
-      </div>
-
-      {/* Layout with Filters Sidebar & Results */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters Sidebar */}
-        <div className={`lg:block ${mobileFilterOpen ? 'block' : 'hidden'} lg:col-span-1`}>
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm sticky top-24 space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
-                Filter Options
-              </span>
-              <button
-                onClick={handleResetFilters}
-                className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Reset
-              </button>
-            </div>
-
-            {/* Sport Filter */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
-                Sport Type
-              </label>
-              <select
-                value={sport}
-                onChange={(e) => setSport(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-emerald-500 font-medium"
-              >
-                <option value="All">All Sports</option>
-                {SPORTS_LIST.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* City Filter */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
-                Location / City
-              </label>
-              <select
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-emerald-500 font-medium"
-              >
-                <option value="All">All Locations</option>
-                {CITIES_LIST.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Venue Type */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
-                Venue Environment
-              </label>
-              <div className="space-y-2 text-xs">
-                {['All', 'Indoor', 'Outdoor'].map((type) => (
-                  <label key={type} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="venueType"
-                      checked={venueType === type}
-                      onChange={() => setVenueType(type)}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <span className="text-slate-700">{type === 'All' ? 'All Types' : type}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Price Range Slider */}
-            <div>
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
-                <span>Max Hourly Price</span>
-                <span className="text-emerald-600 font-extrabold text-sm">₹{maxPrice}/hr</span>
-              </div>
-              <input
-                type="range"
-                min="200"
-                max="3000"
-                step="100"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full accent-emerald-600"
-              />
-              <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
-                <span>₹200</span>
-                <span>₹3,000+</span>
-              </div>
-            </div>
-
-            {/* Min Rating Filter */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
-                Minimum Rating
-              </label>
-              <div className="space-y-1.5 text-xs">
-                {[
-                  { val: '0', label: 'Any Rating' },
-                  { val: '4.5', label: '4.5 & above' },
-                  { val: '4.0', label: '4.0 & above' },
-                  { val: '3.5', label: '3.5 & above' },
-                ].map((r) => (
-                  <button
-                    key={r.val}
-                    type="button"
-                    onClick={() => setMinRating(r.val)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg font-medium transition flex items-center justify-between ${
-                      minRating === r.val
-                        ? 'bg-emerald-50 text-emerald-700 font-bold'
-                        : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                      <span>{r.label}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Venues Grid */}
-        <div className="lg:col-span-3 space-y-6">
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-80 rounded-2xl bg-white border border-slate-200 animate-pulse p-4 space-y-3">
-                  <div className="h-44 bg-slate-200 rounded-xl" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                  <div className="h-3 bg-slate-200 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : venues.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
-              <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="text-lg font-bold text-slate-900">No sports venues found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Try adjusting your filters, selecting a different sport, or resetting the search criteria.
-              </p>
-              <button
-                onClick={handleResetFilters}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold"
-              >
-                Reset All Filters
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {displayedVenues.map((venue) => (
-                  <VenueCard key={venue.id} venue={venue} />
-                ))}
-              </div>
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="pt-6 flex items-center justify-between border-t border-slate-200">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 disabled:opacity-40 hover:bg-white flex items-center gap-1"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Previous
-                  </button>
-
-                  <div className="text-xs font-bold text-slate-600">
-                    Page {currentPage} of {totalPages}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 disabled:opacity-40 hover:bg-white flex items-center gap-1"
-                  >
-                    Next <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
 
-export default function VenuesPage() {
+interface PageProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+async function fetchVenuesData(params?: { [key: string]: string | string[] | undefined }) {
+  const sportParam = typeof params?.sport === 'string' ? params.sport : '';
+  const cityParam = typeof params?.city === 'string' ? params.city : '';
+  const searchParam = typeof params?.search === 'string' ? params.search.trim() : '';
+  const venueTypeParam = typeof params?.venueType === 'string' ? params.venueType : '';
+  const minRatingParam = typeof params?.minRating === 'string' ? parseFloat(params.minRating) : 0;
+  const maxPriceParam = typeof params?.maxPrice === 'string' ? parseFloat(params.maxPrice) : 5000;
+  const pageParam = typeof params?.page === 'string' ? Math.max(1, parseInt(params.page) || 1) : 1;
+  const itemsPerPage = 6;
+
+  try {
+    const andConditions: any[] = [{ status: 'APPROVED' }];
+
+    // City filtering with alias expansion (e.g. Bengaluru <-> Bangalore)
+    const cityTerms = getCityDbSearchTerms(cityParam);
+    if (cityTerms.length > 0) {
+      andConditions.push({
+        OR: cityTerms.map((c) => ({
+          city: { contains: c, mode: 'insensitive' },
+        })),
+      });
+    }
+
+    // Venue environment filtering
+    if (venueTypeParam && venueTypeParam !== 'All') {
+      andConditions.push({
+        venueType: { contains: venueTypeParam, mode: 'insensitive' },
+      });
+    }
+
+    // Keyword search
+    if (searchParam) {
+      andConditions.push({
+        OR: [
+          { name: { contains: searchParam, mode: 'insensitive' } },
+          { description: { contains: searchParam, mode: 'insensitive' } },
+          { address: { contains: searchParam, mode: 'insensitive' } },
+          { sports: { contains: searchParam, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    // Sport filtering at DB level
+    const sportTerms = getSportDbSearchTerms(sportParam);
+    if (sportTerms.length > 0) {
+      andConditions.push({
+        OR: sportTerms.map((term) => ({
+          sports: { contains: term, mode: 'insensitive' },
+        })),
+      });
+    }
+
+    const where = { AND: andConditions };
+
+    const facilities = await prisma.facility.findMany({
+      where,
+      include: {
+        courts: {
+          where: { isActive: true },
+          select: { id: true, name: true, sportType: true, pricePerHour: true },
+        },
+        reviews: {
+          select: { id: true, rating: true, user: { select: { id: true, name: true, avatar: true } } },
+        },
+        owner: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const formatted: FacilityWithDetails[] = facilities.map((f) => {
+      let parsedImages: string[] = [];
+      let parsedSports: string[] = [];
+      let parsedAmenities: string[] = [];
+
+      try {
+        parsedImages = typeof f.images === 'string' ? JSON.parse(f.images || '[]') : (f.images || []);
+      } catch {
+        parsedImages = [];
+      }
+      try {
+        parsedSports = typeof f.sports === 'string' ? JSON.parse(f.sports || '[]') : (f.sports || []);
+      } catch {
+        parsedSports = [];
+      }
+      try {
+        parsedAmenities = typeof f.amenities === 'string' ? JSON.parse(f.amenities || '[]') : (f.amenities || []);
+      } catch {
+        parsedAmenities = [];
+      }
+
+      const avgRating =
+        f.reviews.length > 0
+          ? Number((f.reviews.reduce((acc, r) => acc + r.rating, 0) / f.reviews.length).toFixed(1))
+          : 5.0;
+
+      const prices = f.courts.map((c) => c.pricePerHour);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 400;
+
+      return {
+        id: f.id,
+        name: f.name,
+        description: f.description,
+        address: f.address,
+        city: f.city,
+        state: f.state,
+        pincode: f.pincode,
+        venueType: f.venueType,
+        status: f.status,
+        rejectionReason: f.rejectionReason,
+        ownerId: f.ownerId,
+        owner: f.owner,
+        images: parsedImages,
+        sports: parsedSports,
+        amenities: parsedAmenities,
+        courts: f.courts,
+        reviews: f.reviews,
+        avgRating,
+        totalReviews: f.reviews.length,
+        minPrice,
+        createdAt: f.createdAt,
+      } as unknown as FacilityWithDetails;
+    });
+
+    // Client-side computed fields filter
+    let filtered = formatted;
+    if (minRatingParam > 0) {
+      filtered = filtered.filter((f) => (f.avgRating || 0) >= minRatingParam);
+    }
+    if (maxPriceParam < 5000) {
+      filtered = filtered.filter((f) => (f.minPrice || 0) <= maxPriceParam);
+    }
+
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
+    const currentPage = Math.min(pageParam, totalPages);
+    const displayedVenues = filtered.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
+    return {
+      venues: displayedVenues,
+      totalCount,
+      totalPages,
+      currentPage,
+      error: null,
+    };
+  } catch (error) {
+    console.error('[fetchVenuesData] Error loading venues:', error);
+    return {
+      venues: [],
+      totalCount: 0,
+      totalPages: 1,
+      currentPage: 1,
+      error: error instanceof Error ? error.message : 'Database service temporarily unavailable.',
+    };
+  }
+}
+
+export default async function VenuesPage({ searchParams }: PageProps) {
+  const sport = typeof searchParams?.sport === 'string' ? searchParams.sport : 'All';
+  const city = typeof searchParams?.city === 'string' ? searchParams.city : 'All';
+  const search = typeof searchParams?.search === 'string' ? searchParams.search : '';
+  const venueType = typeof searchParams?.venueType === 'string' ? searchParams.venueType : 'All';
+  const minRating = typeof searchParams?.minRating === 'string' ? searchParams.minRating : '0';
+  const maxPrice = typeof searchParams?.maxPrice === 'string' ? searchParams.maxPrice : '5000';
+
+  const { venues, totalCount, totalPages, currentPage, error } = await fetchVenuesData(searchParams);
+
+  // Helper for pagination links
+  const createPageUrl = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (sport && sport !== 'All') params.set('sport', sport);
+    if (city && city !== 'All') params.set('city', city);
+    if (search.trim()) params.set('search', search.trim());
+    if (venueType && venueType !== 'All') params.set('venueType', venueType);
+    if (parseFloat(minRating) > 0) params.set('minRating', minRating);
+    if (parseFloat(maxPrice) < 5000) params.set('maxPrice', maxPrice);
+    if (targetPage > 1) params.set('page', targetPage.toString());
+    const qs = params.toString();
+    return `/venues${qs ? `?${qs}` : ''}`;
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen py-10">
-      <Suspense fallback={<div className="max-w-7xl mx-auto p-8 text-center text-slate-400">Loading sports directory...</div>}>
-        <VenuesContent />
-      </Suspense>
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-6">
+        {/* Header */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px] text-emerald-600">sports_tennis</span>
+              <span>Sports Facilities &amp; Clubs</span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
+              Find &amp; Book Sports Venues
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              Showing {totalCount} approved courts and turfs ready for immediate booking
+            </p>
+          </div>
+        </div>
+
+        {/* Sports Category Pills */}
+        <div className="mb-8">
+          <SportsCategoryPills />
+        </div>
+
+        {/* Layout with Filters Sidebar & Results */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Filters Sidebar (Client Component) */}
+          <VenuesFilterSidebar
+            initialSport={sport}
+            initialCity={city}
+            initialSearch={search}
+            initialVenueType={venueType}
+            initialMinRating={minRating}
+            initialMaxPrice={maxPrice}
+          />
+
+          {/* Venues Grid */}
+          <div className="lg:col-span-3 space-y-6">
+            {error ? (
+              <div className="bg-white rounded-3xl border border-red-200 p-12 text-center space-y-4 shadow-sm">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Unable to load venues</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {error}
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <Link
+                    href="/venues"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Try Again
+                  </Link>
+                  <Link
+                    href="/venues"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Reset Filters
+                  </Link>
+                </div>
+              </div>
+            ) : venues.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4 shadow-sm">
+                <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
+                <h3 className="text-lg font-bold text-slate-900">No sports venues found</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  No arenas match the selected filters. Try choosing a different sport, resetting location, or adjusting the price range.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/venues"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Reset All Filters
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {venues.map((venue) => (
+                    <VenueCard key={venue.id} venue={venue} />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="pt-6 flex items-center justify-between border-t border-slate-200">
+                    {currentPage > 1 ? (
+                      <Link
+                        href={createPageUrl(currentPage - 1)}
+                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white flex items-center gap-1 transition"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Previous
+                      </Link>
+                    ) : (
+                      <span className="px-3 py-2 rounded-lg border border-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed flex items-center gap-1">
+                        <ChevronLeft className="w-4 h-4" /> Previous
+                      </span>
+                    )}
+
+                    <div className="text-xs font-bold text-slate-600">
+                      Page {currentPage} of {totalPages}
+                    </div>
+
+                    {currentPage < totalPages ? (
+                      <Link
+                        href={createPageUrl(currentPage + 1)}
+                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white flex items-center gap-1 transition"
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    ) : (
+                      <span className="px-3 py-2 rounded-lg border border-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed flex items-center gap-1">
+                        Next <ChevronRight className="w-4 h-4" />
+                      </span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

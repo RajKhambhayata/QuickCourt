@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Zap, CheckCircle2, MapPin, Mail, Clock } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -10,7 +11,7 @@ export default function Footer() {
           <div className="space-y-4 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="w-10 h-10 rounded-lg bg-surface-variant/15 flex items-center justify-center text-primary-container shadow-md group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-[24px]">bolt</span>
+                <Zap className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-headline-sm text-headline-sm text-surface font-extrabold tracking-tight">
@@ -25,7 +26,7 @@ export default function Footer() {
               The fastest way to discover sports facilities, reserve floodlit courts, and play with your local community. Zero double-booking guarantee.
             </p>
             <div className="flex items-center gap-2 text-xs text-primary-fixed font-semibold">
-              <span className="material-symbols-outlined text-[16px]">verified</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>100% Verified Venues &amp; Instant Digital Passes</span>
             </div>
           </div>
@@ -101,15 +102,15 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 font-body-sm text-sm text-tertiary-fixed">
               <li className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary-container">location_on</span>
+                <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Koramangala &amp; HSR Layout, Bengaluru</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary-container">mail</span>
+                <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>support@quickcourt.com</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary-container">schedule</span>
+                <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Support Hours: 06:00 AM – 11:30 PM</span>
               </li>
             </ul>

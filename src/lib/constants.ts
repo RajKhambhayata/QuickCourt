@@ -126,11 +126,17 @@ export function getSportDbSearchTerms(sportInput: string | null | undefined): st
   return [slug];
 }
 
+// Get sport definition by slug, ID, or name
+export function getSportBySlug(slugOrName: string | null | undefined): SportDefinition | undefined {
+  if (!slugOrName) return undefined;
+  const slug = normalizeSportSlug(slugOrName);
+  return SPORTS_LIST.find((s) => s.slug === slug || s.id === slugOrName || s.name === slugOrName);
+}
+
 // Get sport display name from slug or ID
 export function getSportName(slugOrId: string | null | undefined): string {
   if (!slugOrId || slugOrId === 'All') return 'All Sports';
-  const slug = normalizeSportSlug(slugOrId);
-  const sport = SPORTS_LIST.find((s) => s.slug === slug || s.id === slugOrId);
+  const sport = getSportBySlug(slugOrId);
   return sport?.name || slugOrId;
 }
 

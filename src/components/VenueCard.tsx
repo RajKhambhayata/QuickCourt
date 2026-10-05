@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { FacilityWithDetails } from '@/lib/types';
+import { getSportBySlug } from '@/lib/constants';
+import { MapPin, Star, CheckCircle2, ChevronRight } from 'lucide-react';
 
 export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
   const thumbnail =
@@ -9,6 +11,7 @@ export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
       : 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600';
 
   const primarySport = venue.sports && venue.sports.length > 0 ? venue.sports[0] : 'Sports';
+  const sportMeta = getSportBySlug(primarySport);
 
   return (
     <div className="rounded-2xl bg-surface-container-lowest border border-surface-container-high/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
@@ -23,24 +26,24 @@ export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
           <div className="absolute inset-0 bg-gradient-to-t from-on-background/85 via-transparent to-black/30" />
 
           {/* Pill sport tag */}
-          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-body-sm font-bold flex items-center gap-1 shadow-sm">
-            <span className="material-symbols-outlined text-[14px] text-primary-container">sports_tennis</span>
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-body-sm font-bold flex items-center gap-1.5 shadow-sm">
+            <span>{sportMeta?.icon || '🏸'}</span>
             <span>{primarySport}</span>
           </div>
 
           {/* Distance & Rating badge */}
           <div className="absolute top-3 right-3 px-2 py-1 rounded-md bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-body-sm font-bold flex items-center gap-1 shadow-sm">
-            <span className="material-symbols-outlined text-[14px] text-secondary-container material-symbols-fill">star</span>
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{venue.avgRating ? venue.avgRating.toFixed(1) : '4.9'}</span>
           </div>
 
           {/* Bottom verified indicator & proximity */}
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-inverse-on-surface">
-            <span className="font-label-md text-body-sm flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px] text-primary-fixed">verified</span>
+            <span className="font-label-md text-body-sm flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>{venue.venueType || 'Verified Facility'}</span>
             </span>
-            <span className="font-data-mono text-body-sm text-primary-fixed font-bold">
+            <span className="font-data-mono text-body-sm text-emerald-400 font-bold">
               2.1 km away
             </span>
           </div>
@@ -52,8 +55,8 @@ export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
             {venue.name}
           </h3>
 
-          <p className="font-body-sm text-body-sm text-tertiary flex items-center gap-1 truncate">
-            <span className="material-symbols-outlined text-[16px] text-primary">location_on</span>
+          <p className="font-body-sm text-body-sm text-tertiary flex items-center gap-1.5 truncate">
+            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="truncate">{venue.address}, {venue.city}</span>
           </p>
 
@@ -89,7 +92,7 @@ export default function VenueCard({ venue }: { venue: FacilityWithDetails }) {
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary-container hover:bg-secondary-container/90 active:scale-[0.98] text-on-secondary font-label-lg text-label-lg font-bold shadow-sm transition-all"
         >
           <span>Book Slot</span>
-          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
     </div>

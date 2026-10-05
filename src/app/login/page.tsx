@@ -1,7 +1,15 @@
-'use client';
-
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Trophy, Building2, Shield, ArrowRight } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Sign In to Your QuickCourt Portal | QuickCourt',
+  description: 'Log in to your QuickCourt player account, facility owner operations console, or administrative portal.',
+  openGraph: {
+    title: 'Sign In to Your QuickCourt Portal | QuickCourt',
+    description: 'Log in to your QuickCourt player account, facility owner operations console, or administrative portal.',
+  },
+};
 
 const portals = [
   {

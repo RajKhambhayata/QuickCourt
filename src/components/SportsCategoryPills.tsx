@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { SPORTS_LIST } from '@/lib/constants';
 
+import { ChevronRight } from 'lucide-react';
+
 interface SportsCategoryPillsProps {
   courtCounts?: Record<string, number>;
 }
@@ -36,7 +38,7 @@ export default function SportsCategoryPills({ courtCounts }: SportsCategoryPills
           className="inline-flex items-center gap-1 text-emerald-600 font-label-lg text-label-lg font-bold hover:underline"
         >
           View All {SPORTS_LIST.length} Sports Categories{' '}
-          <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+          <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
 

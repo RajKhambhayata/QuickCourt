@@ -6,7 +6,21 @@ import { usePathname, useRouter } from 'next/navigation';
 import { UserSession } from '@/lib/types';
 import { SPORTS_LIST, CITIES_LIST } from '@/lib/constants';
 import QuickSearchModal from './QuickSearchModal';
-import { MapPin, Search, ChevronDown } from 'lucide-react';
+import {
+  MapPin,
+  Search,
+  ChevronDown,
+  Zap,
+  PlusCircle,
+  Bell,
+  User,
+  Calendar,
+  Building2,
+  ShieldCheck,
+  LogOut,
+  Menu,
+  X,
+} from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -74,7 +88,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-lg bg-inverse-surface flex items-center justify-center text-primary-container shadow-[0_2px_8px_rgba(0,230,118,0.25)] group-hover:scale-105 transition-transform">
-              <span className="material-symbols-outlined text-[24px]">bolt</span>
+              <Zap className="w-5 h-5 text-emerald-400" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
@@ -289,7 +303,7 @@ export default function Navbar() {
               href="/owner/signup"
               className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-secondary-container text-on-secondary font-label-lg text-label-lg hover:opacity-95 transition-opacity shadow-sm"
             >
-              <span className="material-symbols-outlined text-[18px]">add_business</span>
+              <PlusCircle className="w-4 h-4" />
               <span>List Your Facility</span>
             </Link>
 
@@ -299,7 +313,7 @@ export default function Navbar() {
               type="button"
               className="relative w-10 h-10 rounded-lg flex items-center justify-center bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <Bell className="w-4 h-4" />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest" />
             </button>
 
@@ -316,9 +330,7 @@ export default function Navbar() {
                     alt={user.name}
                     className="w-8 h-8 rounded-full object-cover border border-primary-container"
                   />
-                  <span className="material-symbols-outlined text-on-surface-variant text-[18px] hidden sm:block">
-                    expand_more
-                  </span>
+                  <ChevronDown className="w-4 h-4 text-on-surface-variant hidden sm:block" />
                 </button>
 
                 {userDropdownOpen && (
@@ -337,7 +349,7 @@ export default function Navbar() {
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[16px] text-tertiary">person</span>
+                      <User className="w-4 h-4 text-tertiary" />
                       <span>Profile Settings</span>
                     </Link>
 
@@ -347,7 +359,7 @@ export default function Navbar() {
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px] text-tertiary">calendar_month</span>
+                        <Calendar className="w-4 h-4 text-tertiary" />
                         <span>My Bookings</span>
                       </Link>
                     )}
@@ -358,7 +370,7 @@ export default function Navbar() {
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px] text-primary">domain</span>
+                        <Building2 className="w-4 h-4 text-emerald-600" />
                         <span>Facility Management</span>
                       </Link>
                     )}
@@ -369,7 +381,7 @@ export default function Navbar() {
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px] text-secondary">admin_panel_settings</span>
+                        <ShieldCheck className="w-4 h-4 text-indigo-600" />
                         <span>Admin Control Center</span>
                       </Link>
                     )}
@@ -381,7 +393,7 @@ export default function Navbar() {
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-error hover:bg-error-container/20 text-left transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[16px]">logout</span>
+                      <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
                     </button>
                   </div>
@@ -400,7 +412,7 @@ export default function Navbar() {
                     className="flex items-center gap-1 px-3 py-2 font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
                   >
                     <span>Log In</span>
-                    <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                    <ChevronDown className="w-4 h-4" />
                   </button>
 
                   {loginDropdownOpen && (
@@ -411,7 +423,7 @@ export default function Navbar() {
                         onClick={() => setLoginDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px] text-primary">sports_tennis</span>
+                        <span className="text-base">🏸</span>
                         <div>
                           <div>Player Login</div>
                           <div className="text-[10px] text-tertiary font-normal">Book &amp; play</div>
@@ -422,7 +434,7 @@ export default function Navbar() {
                         onClick={() => setLoginDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px] text-secondary">domain</span>
+                        <Building2 className="w-4 h-4 text-teal-600" />
                         <div>
                           <div>Facility Owner</div>
                           <div className="text-[10px] text-tertiary font-normal">Manage turfs</div>
@@ -434,7 +446,7 @@ export default function Navbar() {
                         onClick={() => setLoginDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px] text-outline">admin_panel_settings</span>
+                        <ShieldCheck className="w-4 h-4 text-indigo-600" />
                         <div>
                           <div>Super Admin</div>
                           <div className="text-[10px] text-tertiary font-normal">Platform control</div>
@@ -455,7 +467,7 @@ export default function Navbar() {
                     className="px-4 py-2 text-xs font-extrabold text-on-primary-container bg-primary-container hover:bg-inverse-primary rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <span>Sign Up</span>
-                    <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                    <ChevronDown className="w-4 h-4" />
                   </button>
 
                   {signupDropdownOpen && (
@@ -466,7 +478,7 @@ export default function Navbar() {
                         onClick={() => setSignupDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px] text-primary">sports_tennis</span>
+                        <span className="text-base">🏸</span>
                         <div>
                           <div>Player Account</div>
                           <div className="text-[10px] text-tertiary font-normal">Free registration</div>
@@ -477,7 +489,7 @@ export default function Navbar() {
                         onClick={() => setSignupDropdownOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[18px] text-secondary">domain</span>
+                        <Building2 className="w-4 h-4 text-teal-600" />
                         <div>
                           <div>Facility Owner</div>
                           <div className="text-[10px] text-tertiary font-normal">List arena &amp; turfs</div>
@@ -495,10 +507,9 @@ export default function Navbar() {
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+                aria-label="Toggle navigation menu"
               >
-                <span className="material-symbols-outlined text-[24px]">
-                  {mobileMenuOpen ? 'close' : 'menu'}
-                </span>
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>

@@ -1,8 +1,8 @@
-import { unstable_cache } from 'next/cache';
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { SlotStatus } from '@/lib/types';
-import { revalidateAvailability } from '@/lib/cache';
 
 export async function GET(
   request: Request,
@@ -13,43 +13,50 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    const court = await unstable_cache(
-      () => prisma.court.findUnique({
-        where: { id: courtId },
-        include: { facility: true },
-      }),
-      [`court-${courtId}`],
-      { revalidate: 300, tags: ['availability'] }
-    )();
+    const court = await prisma.court.findUnique({
+      where: { id: courtId },
+      include: { facility: true },
+    });
 
     if (!court) {
       return NextResponse.json({ error: 'Court not found' }, { status: 404 });
     }
 
-    // Get all bookings on this court for the date
-    const bookings = await unstable_cache(
-      () => prisma.booking.findMany({
+    // 10-Minute Hold Expiry: clean up any stale pending bookings older than 10 minutes
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    try {
+      await prisma.booking.updateMany({
         where: {
           courtId,
           date,
-          status: { not: 'CANCELLED' },
+          status: 'PENDING_PAYMENT',
+          createdAt: { lt: tenMinutesAgo },
         },
-      }),
-      [`bookings-${courtId}-${date}`],
-      { revalidate: 10, tags: ['availability'] }
-    )();
+        data: {
+          status: 'CANCELLED',
+          cancellationReason: 'Payment window expired (10 minutes)',
+        },
+      });
+    } catch (cleanupErr) {
+      console.warn('Slot hold expiry cleanup non-fatal warning:', cleanupErr);
+    }
+
+    // Get all valid active bookings on this court for the date
+    const bookings = await prisma.booking.findMany({
+      where: {
+        courtId,
+        date,
+        status: { not: 'CANCELLED' },
+      },
+    });
 
     // Get all blocked maintenance slots on this court for the date
-    const blockedSlots = await unstable_cache(
-      () => prisma.blockedSlot.findMany({
-        where: {
-          courtId,
-          date,
-        },
-      }),
-      [`blocked-${courtId}-${date}`],
-      { revalidate: 10, tags: ['availability'] }
-    )();
+    const blockedSlots = await prisma.blockedSlot.findMany({
+      where: {
+        courtId,
+        date,
+      },
+    });
 
     // Generate slots
     const startHour = court.operatingStartHour || 6;

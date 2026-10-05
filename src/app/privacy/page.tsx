@@ -1,5 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | QuickCourt',
+  description: 'Understand how QuickCourt collects, protects, and handles player and venue partner information.',
+  openGraph: {
+    title: 'Privacy Policy | QuickCourt',
+    description: 'Understand how QuickCourt collects, protects, and handles player and venue partner information.',
+  },
+};
 
 export default function PrivacyPolicyPage() {
   return (
@@ -24,7 +34,7 @@ export default function PrivacyPolicyPage() {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-on-surface">2. How We Use Your Information</h2>
             <p>
-              Your data is used to confirm court reservations, issue instant entry passes via WhatsApp or SMS, and provide facility owners with check-in schedules. We never sell your personal information to third parties.
+              Your data is used to confirm court reservations, issue instant digital QR entry passes, and provide facility owners with verified check-in schedules. We never sell your personal information to third parties.
             </p>
           </section>
 

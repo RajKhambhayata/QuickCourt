@@ -5,10 +5,12 @@ import SportsCategoryPills from '@/components/SportsCategoryPills';
 import VenueCard from '@/components/VenueCard';
 import prisma from '@/lib/prisma';
 import { FacilityWithDetails } from '@/lib/types';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
+async function getFeaturedVenues(): Promise<{ venues: FacilityWithDetails[]; error: string | null }> {
   try {
     const venues = await prisma.facility.findMany({
       where: { status: 'APPROVED' },
@@ -21,7 +23,7 @@ async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
       orderBy: { createdAt: 'desc' },
     });
 
-    return venues.map((f) => {
+    const formattedVenues = venues.map((f) => {
       let parsedImages: string[] = [];
       let parsedSports: string[] = [];
       let parsedAmenities: string[] = [];
@@ -60,22 +62,47 @@ async function getFeaturedVenues(): Promise<FacilityWithDetails[]> {
         minPrice,
       };
     }) as unknown as FacilityWithDetails[];
+
+    return { venues: formattedVenues, error: null };
   } catch (error) {
     console.error('[getFeaturedVenues] Database query failed:', error);
-    return [];
+    return { venues: [], error: error instanceof Error ? error.message : 'Failed to load venues' };
+  }
+}
+
+async function getSportCourtCounts(): Promise<Record<string, number>> {
+  try {
+    const counts = await prisma.court.groupBy({
+      by: ['sportType'],
+      where: {
+        isActive: true,
+        facility: { status: 'APPROVED' },
+      },
+      _count: { id: true },
+    });
+    const map: Record<string, number> = {};
+    counts.forEach((c) => {
+      map[c.sportType] = c._count.id;
+    });
+    return map;
+  } catch {
+    return {};
   }
 }
 
 export default async function HomePage() {
-  const venues = await getFeaturedVenues();
+  const [{ venues, error: venuesError }, courtCounts] = await Promise.all([
+    getFeaturedVenues(),
+    getSportCourtCounts(),
+  ]);
 
   return (
     <div className="space-y-0 pb-20 bg-background text-on-surface">
       {/* 1. Kinetic Hero Section */}
       <HeroSection />
 
-      {/* 2. 8 Sports Discipline Grid */}
-      <SportsCategoryPills />
+      {/* 2. 8 Sports Discipline Grid with Real DB Counts */}
+      <SportsCategoryPills courtCounts={courtCounts} />
 
       {/* 3. How It Works in 3 Taps */}
       <section className="bg-surface-container-low py-16 w-full border-y border-surface-container-high/60">
@@ -88,7 +115,7 @@ export default async function HomePage() {
               Booked to Battling in 3 Steps
             </h2>
             <p className="font-body-md text-body-md text-tertiary mt-2">
-              Zero phone calls, zero double-booked court disputes. Direct hardware integration locks your court instantly.
+              Zero phone calls, zero double-booked court disputes. Live slot matrix locks your court instantly.
             </p>
           </div>
 
@@ -151,16 +178,16 @@ export default async function HomePage() {
                   <span className="material-symbols-outlined text-[28px] text-secondary-container">qr_code_scanner</span>
                 </div>
                 <h3 className="font-headline-sm text-headline-sm text-on-surface mb-2 font-bold">
-                  Flash QR &amp; Smash
+                  Instant Digital Pass
                 </h3>
                 <p className="font-body-md text-body-md text-tertiary leading-relaxed">
-                  Get an instant WhatsApp entry pass with QR code and turnstile pin. Walk right past the reception desk directly onto your court.
+                  Receive an instant digital entry pass with QR code and booking reference. Walk right in directly onto your court.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-surface-container-high/40">
                 <div className="flex items-center gap-2 text-primary font-label-md text-label-md font-semibold">
-                  <span className="material-symbols-outlined text-[16px]">chat</span>
-                  <span>Direct WhatsApp Ticket Sync</span>
+                  <span className="material-symbols-outlined text-[16px]">confirmation_number</span>
+                  <span>Instant Pass on Confirmation</span>
                 </div>
               </div>
             </div>
@@ -195,7 +222,20 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {venues.length === 0 ? (
+        {venuesError ? (
+          <div className="text-center py-16 bg-surface-container-lowest rounded-2xl border border-error-container">
+            <AlertCircle className="w-12 h-12 text-error mx-auto mb-3" />
+            <p className="text-on-surface font-semibold mb-2">Unable to load venues</p>
+            <p className="text-sm text-tertiary mb-4">{venuesError}</p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-sm font-bold hover:bg-inverse-primary transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </Link>
+          </div>
+        ) : venues.length === 0 ? (
           <div className="text-center py-16 bg-surface-container-lowest rounded-2xl border border-surface-container-high">
             <span className="material-symbols-outlined text-4xl text-outline mb-2">stadium</span>
             <p className="text-on-surface font-semibold">No approved arenas available at the moment.</p>
@@ -222,7 +262,7 @@ export default async function HomePage() {
               List Your Arena &amp; Turn Zero-Show Slots Into Revenue
             </h2>
             <p className="font-body-md text-body-md text-tertiary-fixed leading-relaxed">
-              Join leading sports facilities using QuickCourt's zero double-booking live slot matrix, hardware lighting automation, and instant turnstile access control.
+              Join leading sports facilities using QuickCourt's zero double-booking live slot matrix, automated hold locks, and digital booking management.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link
@@ -259,7 +299,7 @@ export default async function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-container text-[18px]">check_circle</span>
-              <span>Live hardware lights &amp; gate controls</span>
+              <span>Digital slot scheduling &amp; member passes</span>
             </div>
           </div>
         </div>

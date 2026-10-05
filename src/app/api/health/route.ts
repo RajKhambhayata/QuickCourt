@@ -8,14 +8,17 @@ export const dynamic = 'force-dynamic';
  * Health check endpoint for monitoring and load balancers
  */
 export async function GET(request: Request) {
+  const startTime = Date.now();
   try {
     // Check database connectivity
     await prisma.$queryRaw`SELECT 1`;
+    const latencyMs = Date.now() - startTime;
 
     const healthData = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      latencyMs,
       environment: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || '0.1.0',
       services: {
@@ -26,14 +29,19 @@ export async function GET(request: Request) {
     };
 
     return NextResponse.json(healthData, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
+    const latencyMs = Date.now() - startTime;
     console.error('Health check failed:', error);
     
     return NextResponse.json(
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: 'Service unavailable',
+        latencyMs,
+        error: error?.message || 'Database unavailable',
+        services: {
+          database: 'disconnected',
+        },
       },
       { status: 503 }
     );

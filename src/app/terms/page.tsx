@@ -1,5 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | QuickCourt',
+  description: 'Review the terms, conditions, cancellation rules, and venue ground policies for booking on QuickCourt.',
+  openGraph: {
+    title: 'Terms of Service | QuickCourt',
+    description: 'Review the terms, conditions, cancellation rules, and venue ground policies for booking on QuickCourt.',
+  },
+};
 
 export default function TermsOfServicePage() {
   return (

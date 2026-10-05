@@ -1,10 +1,8 @@
-import { unstable_cache } from 'next/cache';
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireRole } from '@/lib/require-role';
-import { revalidateOwnerStats } from '@/lib/cache';
-
-export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -13,16 +11,12 @@ export async function GET() {
     const user = guard.user;
 
     // Facilities owned by this user
-    const facilities = await unstable_cache(
-      () => prisma.facility.findMany({
-        where: { ownerId: user.id },
-        include: {
-          courts: { select: { id: true, name: true, sportType: true, isActive: true, pricePerHour: true } },
-        },
-      }),
-      [`owner-facilities-${user.id}`],
-      { revalidate: 60, tags: [`owner-stats-${user.id}`] }
-    )();
+    const facilities = await prisma.facility.findMany({
+      where: { ownerId: user.id },
+      include: {
+        courts: { select: { id: true, name: true, sportType: true, isActive: true, pricePerHour: true } },
+      },
+    });
 
     const facilityIds = facilities.map((f) => f.id);
     const courtIds = facilities.flatMap((f) => f.courts.map((c) => c.id));
@@ -32,74 +26,54 @@ export async function GET() {
 
     // Use aggregation for KPIs instead of fetching all bookings
     const [totalBookingsCount, totalEarningsResult, bookingTrendsRaw, peakHoursRaw, todaysBookings] = await Promise.all([
-      unstable_cache(
-        () => prisma.booking.count({
-          where: {
-            courtId: { in: courtIds },
-            status: { not: 'CANCELLED' },
-          },
-        }),
-        [`owner-bookings-count-${user.id}`],
-        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
-      )(),
-      unstable_cache(
-        () => prisma.booking.aggregate({
-          _sum: { totalAmount: true },
-          where: {
-            courtId: { in: courtIds },
-            status: { not: 'CANCELLED' },
-          },
-        }),
-        [`owner-earnings-${user.id}`],
-        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
-      )(),
+      prisma.booking.count({
+        where: {
+          courtId: { in: courtIds },
+          status: { not: 'CANCELLED' },
+        },
+      }),
+      prisma.booking.aggregate({
+        _sum: { totalAmount: true },
+        where: {
+          courtId: { in: courtIds },
+          status: { not: 'CANCELLED' },
+        },
+      }),
       // Booking trends - aggregate only
-      unstable_cache(
-        () => prisma.booking.groupBy({
-          by: ['date'],
-          _count: { id: true },
-          _sum: { totalAmount: true },
-          where: {
-            courtId: { in: courtIds },
-            status: { not: 'CANCELLED' },
-            date: {
-              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            },
+      prisma.booking.groupBy({
+        by: ['date'],
+        _count: { id: true },
+        _sum: { totalAmount: true },
+        where: {
+          courtId: { in: courtIds },
+          status: { not: 'CANCELLED' },
+          date: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           },
-        }),
-        [`owner-trends-${user.id}`],
-        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
-      )(),
+        },
+      }),
       // Peak hours - aggregate only
-      unstable_cache(
-        () => prisma.booking.groupBy({
-          by: ['startTime'],
-          _count: { id: true },
-          where: {
-            courtId: { in: courtIds },
-            status: { not: 'CANCELLED' },
-          },
-        }),
-        [`owner-peak-hours-${user.id}`],
-        { revalidate: 60, tags: [`owner-stats-${user.id}`] }
-      )(),
-      // Today's bookings - limited to 20, shorter cache
-      unstable_cache(
-        () => prisma.booking.findMany({
-          where: {
-            courtId: { in: courtIds },
-            date: new Date().toISOString().split('T')[0],
-          },
-          include: {
-            court: { select: { name: true, sportType: true } },
-            user: { select: { name: true, phone: true } },
-          },
-          orderBy: { startTime: 'asc' },
-          take: 20,
-        }),
-        [`owner-today-${user.id}`],
-        { revalidate: 10, tags: [`owner-stats-${user.id}`] }
-      )(),
+      prisma.booking.groupBy({
+        by: ['startTime'],
+        _count: { id: true },
+        where: {
+          courtId: { in: courtIds },
+          status: { not: 'CANCELLED' },
+        },
+      }),
+      // Today's bookings - limited to 20
+      prisma.booking.findMany({
+        where: {
+          courtId: { in: courtIds },
+          date: new Date().toISOString().split('T')[0],
+        },
+        include: {
+          court: { select: { name: true, sportType: true } },
+          user: { select: { name: true, phone: true } },
+        },
+        orderBy: { startTime: 'asc' },
+        take: 20,
+      }),
     ]);
 
     const totalEarnings = totalEarningsResult._sum.totalAmount || 0;
@@ -138,7 +112,7 @@ export async function GET() {
 
     const sportEarningsMap: Record<string, { sport: string; revenue: number; bookings: number }> = {};
     sportEarningsRaw.forEach((se) => {
-      const court = facilities.flatMap(f => f.courts).find(c => c.id === se.courtId);
+      const court = facilities.flatMap((f) => f.courts).find((c) => c.id === se.courtId);
       const sport = court?.sportType || 'Other';
       if (!sportEarningsMap[sport]) {
         sportEarningsMap[sport] = { sport, revenue: 0, bookings: 0 };

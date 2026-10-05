@@ -1,5 +1,5 @@
 [build]
-  command = "prisma generate && next build"
+  command = "npm run build"
   publish = ".next"
 
 [[plugins]]
@@ -8,3 +8,5 @@
 [build.environment]
   NODE_VERSION = "20"
   JWT_SECRET = "quickcourt-fallback-secret-key-32chars-min-len"
+  DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
+  DIRECT_URL = "postgresql://postgres:postgres@localhost:5432/postgres"

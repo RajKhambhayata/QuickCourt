@@ -1,9 +1,12 @@
-import { unstable_cache } from 'next/cache';
-import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { revalidateVenues } from '@/lib/cache';
+import {
+  normalizeSportSlug,
+  getSportDbSearchTerms,
+  getCityDbSearchTerms,
+} from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,91 +14,128 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
-    const sport = searchParams.get('sport') || '';
-    const city = searchParams.get('city') || '';
+    const sportParam = searchParams.get('sport') || '';
+    const cityParam = searchParams.get('city') || '';
     const venueType = searchParams.get('venueType') || '';
     const minRating = parseFloat(searchParams.get('minRating') || '0');
     const maxPrice = parseFloat(searchParams.get('maxPrice') || '10000');
     const requestedStatus = searchParams.get('status') || 'APPROVED';
     const ownerId = searchParams.get('ownerId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100 per page
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20')), 100);
 
-    const where: any = {};
+    const andConditions: any[] = [];
 
     // Owner queries are private to their own account. Non-owner traffic only sees published venues.
     if (ownerId) {
-      const user = await getCurrentUser();
+      let user;
+      try {
+        user = await getCurrentUser();
+      } catch (err) {
+        console.error('[venues API] Auth check failed:', err);
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
       if (!user || (user.role !== 'ADMIN' && (user.role !== 'OWNER' || user.id !== ownerId))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
-      where.ownerId = ownerId;
-      where.status = user.role === 'ADMIN' ? requestedStatus : { in: ['PENDING', 'APPROVED', 'REJECTED'] };
+      andConditions.push({ ownerId });
+      andConditions.push({
+        status: user.role === 'ADMIN' ? requestedStatus : { in: ['PENDING', 'APPROVED', 'REJECTED'] },
+      });
     } else {
-      const user = await getCurrentUser();
-      where.status = user?.role === 'ADMIN' ? requestedStatus : 'APPROVED';
+      let user = null;
+      try {
+        user = await getCurrentUser();
+      } catch {
+        user = null;
+      }
+      andConditions.push({
+        status: user?.role === 'ADMIN' ? requestedStatus : 'APPROVED',
+      });
     }
 
-    if (city && city !== 'All') {
-      where.city = { contains: city };
+    // City filtering with alias expansion (e.g. Bengaluru <-> Bangalore)
+    const cityTerms = getCityDbSearchTerms(cityParam);
+    if (cityTerms.length > 0) {
+      andConditions.push({
+        OR: cityTerms.map((c) => ({
+          city: { contains: c, mode: 'insensitive' },
+        })),
+      });
     }
 
     if (venueType && venueType !== 'All') {
-      where.venueType = { contains: venueType };
+      andConditions.push({
+        venueType: { contains: venueType, mode: 'insensitive' },
+      });
     }
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } },
-        { address: { contains: search } },
-        { sports: { contains: search } },
-      ];
+    if (search.trim()) {
+      const q = search.trim();
+      andConditions.push({
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+          { address: { contains: q, mode: 'insensitive' } },
+          { sports: { contains: q, mode: 'insensitive' } },
+        ],
+      });
     }
 
-    // Sport filtering at DB level (JSON contains)
-    if (sport && sport !== 'All') {
-      where.sports = { contains: sport };
+    // Sport filtering at DB level with alias expansion and case-insensitivity
+    const sportTerms = getSportDbSearchTerms(sportParam);
+    if (sportTerms.length > 0) {
+      andConditions.push({
+        OR: sportTerms.map((term) => ({
+          sports: { contains: term, mode: 'insensitive' },
+        })),
+      });
     }
 
-    // Cache key based on filter parameters
-    const cacheKey = `venues-${JSON.stringify(where)}-${page}-${limit}`;
+    const where = andConditions.length > 0 ? { AND: andConditions } : {};
 
     const [facilities, totalCount] = await Promise.all([
-      unstable_cache(
-        async () => prisma.facility.findMany({
-          where,
-          include: {
-            courts: {
-              where: { isActive: true },
-              select: { id: true, name: true, sportType: true, pricePerHour: true },
-            },
-            reviews: {
-              take: 3,
-              select: { id: true, rating: true, user: { select: { id: true, name: true, avatar: true } } },
-            },
-            owner: {
-              select: { id: true, name: true },
-            },
+      prisma.facility.findMany({
+        where,
+        include: {
+          courts: {
+            where: { isActive: true },
+            select: { id: true, name: true, sportType: true, pricePerHour: true },
           },
-          orderBy: { createdAt: 'desc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        [cacheKey],
-        { revalidate: 60, tags: ['venues'] }
-      )(),
-      unstable_cache(
-        async () => prisma.facility.count({ where }),
-        [`${cacheKey}-count`],
-        { revalidate: 60, tags: ['venues'] }
-      )(),
+          reviews: {
+            take: 10,
+            select: { id: true, rating: true, user: { select: { id: true, name: true, avatar: true } } },
+          },
+          owner: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.facility.count({ where }),
     ]);
 
     const formatted = facilities.map((f) => {
-      const parsedImages = JSON.parse(f.images || '[]');
-      const parsedSports = JSON.parse(f.sports || '[]');
-      const parsedAmenities = JSON.parse(f.amenities || '[]');
+      let parsedImages: string[] = [];
+      let parsedSports: string[] = [];
+      let parsedAmenities: string[] = [];
+      try {
+        parsedImages = typeof f.images === 'string' ? JSON.parse(f.images) : (f.images || []);
+      } catch {
+        parsedImages = [];
+      }
+      try {
+        parsedSports = typeof f.sports === 'string' ? JSON.parse(f.sports) : (f.sports || []);
+      } catch {
+        parsedSports = [];
+      }
+      try {
+        parsedAmenities = typeof f.amenities === 'string' ? JSON.parse(f.amenities) : (f.amenities || []);
+      } catch {
+        parsedAmenities = [];
+      }
 
       const avgRating =
         f.reviews.length > 0
@@ -156,7 +196,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser();
+    let user;
+    try {
+      user = await getCurrentUser();
+    } catch (err) {
+      console.error('[venues API POST] Auth check failed:', err);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
     if (!user || user.role !== 'OWNER') {
       return NextResponse.json({ error: 'Unauthorized. Facility Owner role required to create facilities.' }, { status: 403 });
     }

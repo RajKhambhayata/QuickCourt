@@ -1,7 +1,15 @@
-'use client';
-
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Trophy, Building2, Shield, ArrowRight, UserPlus } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Create Your QuickCourt Account | QuickCourt',
+  description: 'Sign up for a free player account or register your sports facility to manage courts and receive instant bookings.',
+  openGraph: {
+    title: 'Create Your QuickCourt Account | QuickCourt',
+    description: 'Sign up for a free player account or register your sports facility to manage courts and receive instant bookings.',
+  },
+};
 
 const portals = [
   {

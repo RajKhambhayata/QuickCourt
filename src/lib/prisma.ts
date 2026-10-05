@@ -10,9 +10,9 @@ export const prisma =
       : ['error'],
   });
 
+globalForPrisma.prisma = prisma;
+
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-  
   // Log slow queries (>100ms) in development
   (prisma as any).$on?.('query', (e: any) => {
     if (e.duration > 100) {

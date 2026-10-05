@@ -1,8 +1,17 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { LoginSchema, LoginService } from '@/modules/auth';
+import { authRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    const rateLimitCheck = checkRateLimit(authRateLimiter, clientIp, 'Login attempts');
+    if (!rateLimitCheck.allowed) {
+      return rateLimitCheck.response;
+    }
+
     const rawBody = await request.json();
     const validation = LoginSchema.safeParse(rawBody);
 
@@ -12,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errorMessage || 'Invalid login details' }, { status: 400 });
     }
 
-    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip');
+    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || clientIp;
     const result = await LoginService.authenticate(validation.data, ipAddress);
 
     if (!result.success || !result.cookieOptions) {

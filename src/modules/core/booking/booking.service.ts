@@ -42,7 +42,22 @@ export class BookingService {
       throw err;
     }
 
-    // Atomic Overlap Check 1: Confirmed / Pending Bookings
+    // Clean up stale PENDING_PAYMENT holds older than 10 minutes on this court/date
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    await tx.booking.updateMany({
+      where: {
+        courtId,
+        date,
+        status: 'PENDING_PAYMENT',
+        createdAt: { lt: tenMinutesAgo },
+      },
+      data: {
+        status: 'CANCELLED',
+        cancellationReason: 'Payment window expired (10 minutes)',
+      },
+    });
+
+    // Atomic Overlap Check 1: Confirmed / Valid Pending Bookings
     const existingBooking = await tx.booking.findFirst({
       where: {
         courtId,

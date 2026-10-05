@@ -35,6 +35,10 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    if (booking.status === 'CANCELLED') {
+      return NextResponse.json({ error: 'Booking is already cancelled' }, { status: 400 });
+    }
+
     const updated = await prisma.booking.update({
       where: { id },
       data: {

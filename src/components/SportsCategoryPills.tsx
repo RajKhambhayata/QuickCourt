@@ -2,132 +2,85 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { SPORTS_LIST } from '@/lib/constants';
 
-interface SportCategoryItem {
-  id: string;
-  name: string;
-  subtext: string;
-  badge: string;
-  badgeStyle: 'primary' | 'secondary' | 'trending' | 'neutral';
-  icon: string;
-  isTrending?: boolean;
+interface SportsCategoryPillsProps {
+  courtCounts?: Record<string, number>;
 }
 
-const CATEGORIES: SportCategoryItem[] = [
-  {
-    id: 'Badminton',
-    name: 'Badminton',
-    subtext: 'BWF Wooden & Synthetic',
-    badge: '64 Courts',
-    badgeStyle: 'primary',
-    icon: 'sports_tennis',
-  },
-  {
-    id: 'Cricket',
-    name: 'Box Cricket',
-    subtext: 'Roof netted & floodlit',
-    badge: '28 Turfs',
-    badgeStyle: 'secondary',
-    icon: 'sports_cricket',
-  },
-  {
-    id: 'Pickleball',
-    name: 'Pickleball',
-    subtext: 'USAPA Pro Acrylics',
-    badge: 'Trending #1',
-    badgeStyle: 'trending',
-    icon: 'sports_baseball',
-    isTrending: true,
-  },
-  {
-    id: 'Tennis',
-    name: 'Lawn Tennis',
-    subtext: 'Clay & Hard courts',
-    badge: '19 Courts',
-    badgeStyle: 'neutral',
-    icon: 'sports_tennis',
-  },
-  {
-    id: 'Football',
-    name: 'Football',
-    subtext: '5v5 & 7v7 FIFA quality',
-    badge: '42 Turfs',
-    badgeStyle: 'primary',
-    icon: 'sports_soccer',
-  },
-  {
-    id: 'Basketball',
-    name: 'Basketball',
-    subtext: 'Shock-absorbing maple',
-    badge: '15 Courts',
-    badgeStyle: 'neutral',
-    icon: 'sports_basketball',
-  },
-  {
-    id: 'Table Tennis',
-    name: 'Table Tennis',
-    subtext: 'Stag 25mm ITTF tables',
-    badge: '22 Tables',
-    badgeStyle: 'neutral',
-    icon: 'sports_handball',
-  },
-  {
-    id: 'Go-Karting',
-    name: 'Go-Karting',
-    subtext: 'Twin-engine tarmac circuits',
-    badge: '4 Tracks',
-    badgeStyle: 'secondary',
-    icon: 'sports_motorsports',
-  },
-];
+const SPORT_SUBTEXTS: Record<string, string> = {
+  badminton: 'BWF Wooden & Synthetic',
+  'box-cricket': 'Roof netted & floodlit',
+  pickleball: 'USAPA Pro Acrylics',
+  tennis: 'Clay & Hard courts',
+  football: '5v5 & 7v7 FIFA quality',
+  basketball: 'Shock-absorbing maple',
+  'table-tennis': 'Stag 25mm ITTF tables',
+  squash: 'Glass-back tournament courts',
+};
 
-export default function SportsCategoryPills() {
+export default function SportsCategoryPills({ courtCounts }: SportsCategoryPillsProps) {
   return (
     <section className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10 py-12 w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
-          <div className="font-label-md text-label-md text-secondary uppercase font-bold tracking-widest mb-1">
+          <div className="font-label-md text-label-md text-emerald-600 uppercase font-bold tracking-widest mb-1">
             Pick Your Discipline
           </div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight">
+          <h2 className="font-headline-lg text-headline-lg text-slate-900 font-extrabold tracking-tight">
             Explore Live Arenas By Sport
           </h2>
         </div>
         <Link
           href="/venues"
-          className="inline-flex items-center gap-1 text-primary font-label-lg text-label-lg font-bold hover:underline"
+          className="inline-flex items-center gap-1 text-emerald-600 font-label-lg text-label-lg font-bold hover:underline"
         >
-          View All 16 Sports Categories <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+          View All {SPORTS_LIST.length} Sports Categories{' '}
+          <span className="material-symbols-outlined text-[18px]">chevron_right</span>
         </Link>
       </div>
 
-      {/* 8 Sports Grid */}
+      {/* Sports Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {CATEGORIES.map((sport) => {
-          if (sport.isTrending) {
+        {SPORTS_LIST.map((sport, index) => {
+          const isTrending = sport.slug === 'pickleball';
+          const subtext = SPORT_SUBTEXTS[sport.slug] || 'Verified turf & courts';
+          
+          // Compute badge from real counts or fallback
+          const rawCount = courtCounts
+            ? (courtCounts[sport.name] ?? courtCounts[sport.id] ?? courtCounts[sport.slug] ?? 0)
+            : undefined;
+
+          let badgeText = 'Available';
+          if (rawCount !== undefined) {
+            badgeText = rawCount > 0 ? `${rawCount} Court${rawCount > 1 ? 's' : ''}` : 'Available';
+          } else if (isTrending) {
+            badgeText = 'Trending #1';
+          }
+
+          if (isTrending) {
             return (
               <Link
-                key={sport.id}
-                href={`/venues?sport=${encodeURIComponent(sport.id)}`}
-                className="group p-4 rounded-xl bg-inverse-surface text-inverse-on-surface shadow-md hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden"
+                key={sport.slug}
+                href={`/venues?sport=${encodeURIComponent(sport.slug)}`}
+                className="group p-4 rounded-xl bg-slate-900 text-white shadow-md hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden"
               >
-                <div className="absolute -right-4 -top-4 w-20 h-20 bg-primary-container/20 rounded-full blur-xl pointer-events-none" />
+                <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/20 rounded-full blur-xl pointer-events-none" />
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="w-12 h-12 rounded-lg bg-surface-variant/20 flex items-center justify-center text-primary-container group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-[28px]">{sport.icon}</span>
+                  <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    <span>{sport.icon}</span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-[11px] font-extrabold uppercase tracking-wide">
-                    {sport.badge}
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-label-md text-[11px] font-extrabold uppercase tracking-wide">
+                    {badgeText}
                   </span>
                 </div>
                 <div className="mt-6 relative z-10">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-headline-sm text-headline-sm text-inverse-on-surface font-bold">
+                    <h3 className="font-headline-sm text-headline-sm text-white font-bold">
                       {sport.name}
                     </h3>
-                    <span className="font-data-mono text-body-sm text-primary-fixed font-semibold">36 Open</span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-tertiary-fixed">{sport.subtext}</p>
+                  <p className="font-body-sm text-xs text-slate-400 mt-0.5">{subtext}</p>
                 </div>
               </Link>
             );
@@ -135,31 +88,29 @@ export default function SportsCategoryPills() {
 
           return (
             <Link
-              key={sport.id}
-              href={`/venues?sport=${encodeURIComponent(sport.id)}`}
-              className="group p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-surface-container-high/60 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              key={sport.slug}
+              href={`/venues?sport=${encodeURIComponent(sport.slug)}`}
+              className="group p-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div className="flex items-start justify-between">
-                <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[28px]">{sport.icon}</span>
+                <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                  <span>{sport.icon}</span>
                 </div>
                 <span
                   className={`px-2 py-0.5 rounded-full font-label-md text-[11px] font-bold ${
-                    sport.badgeStyle === 'primary'
-                      ? 'bg-primary-container/20 text-on-primary-container'
-                      : sport.badgeStyle === 'secondary'
-                      ? 'bg-secondary-fixed text-on-secondary-fixed'
-                      : 'bg-surface-container-highest text-on-surface-variant'
+                    index % 2 === 0
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'bg-slate-100 text-slate-700'
                   }`}
                 >
-                  {sport.badge}
+                  {badgeText}
                 </span>
               </div>
               <div className="mt-6">
-                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                <h3 className="font-headline-sm text-headline-sm text-slate-900 font-bold">
                   {sport.name}
                 </h3>
-                <p className="font-body-sm text-body-sm text-tertiary">{sport.subtext}</p>
+                <p className="font-body-sm text-xs text-slate-500 mt-0.5">{subtext}</p>
               </div>
             </Link>
           );

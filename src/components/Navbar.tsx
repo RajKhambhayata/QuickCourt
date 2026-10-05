@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserSession } from '@/lib/types';
+import { SPORTS_LIST, CITIES_LIST } from '@/lib/constants';
+import QuickSearchModal from './QuickSearchModal';
+import { MapPin, Search, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,6 +16,39 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false);
+
+  // Phase 2B & 2C: Sports menu, City sync, Quick Search modal
+  const [sportsDropdownOpen, setSportsDropdownOpen] = useState(false);
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('Bangalore');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    const saved = localStorage.getItem('quickcourt_city');
+    if (saved && CITIES_LIST.includes(saved)) {
+      setSelectedCity(saved);
+    }
+
+    const handleCityChange = (e: any) => {
+      if (e.detail && CITIES_LIST.includes(e.detail)) {
+        setSelectedCity(e.detail);
+      }
+    };
+    window.addEventListener('quickcourt_city_changed', handleCityChange);
+    return () => window.removeEventListener('quickcourt_city_changed', handleCityChange);
+  }, []);
+
+  const handleSelectCity = (newCity: string) => {
+    setSelectedCity(newCity);
+    setCityDropdownOpen(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('quickcourt_city', newCity);
+      window.dispatchEvent(new CustomEvent('quickcourt_city_changed', { detail: newCity }));
+    }
+    router.push(`/venues?city=${encodeURIComponent(newCity)}`);
+  };
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -65,16 +101,53 @@ export default function Navbar() {
               Find Courts
             </Link>
 
-            <Link
-              href="/venues?sport=Badminton"
-              className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors ${
-                pathname.includes('sport=')
-                  ? 'bg-surface-container text-on-surface font-bold'
-                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-              }`}
+            {/* Sports Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setSportsDropdownOpen(true)}
+              onMouseLeave={() => setSportsDropdownOpen(false)}
             >
-              Sports
-            </Link>
+              <button
+                type="button"
+                onClick={() => setSportsDropdownOpen(!sportsDropdownOpen)}
+                className={`px-3.5 py-2 rounded-lg font-label-lg text-label-lg transition-colors flex items-center gap-1 ${
+                  pathname.includes('sport=')
+                    ? 'bg-surface-container text-on-surface font-bold'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                }`}
+              >
+                <span>Sports</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
+
+              {sportsDropdownOpen && (
+                <div className="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    All Disciplines
+                  </div>
+                  {SPORTS_LIST.map((s) => (
+                    <Link
+                      key={s.slug}
+                      href={`/venues?sport=${encodeURIComponent(s.slug)}`}
+                      onClick={() => setSportsDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition"
+                    >
+                      <span className="text-sm">{s.icon}</span>
+                      <span>{s.name}</span>
+                    </Link>
+                  ))}
+                  <div className="border-t border-slate-100 mt-1 pt-1">
+                    <Link
+                      href="/venues"
+                      onClick={() => setSportsDropdownOpen(false)}
+                      className="block px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50"
+                    >
+                      View All Venues →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Link
               href="/rewards"
@@ -162,22 +235,54 @@ export default function Navbar() {
 
           {/* Right Action Group */}
           <div className="flex items-center gap-3">
-            {/* Location selector */}
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-[18px] text-primary">location_on</span>
-              <span className="font-label-md text-label-md font-semibold text-on-surface">Bengaluru, KA</span>
-              <span className="material-symbols-outlined text-[16px]">expand_more</span>
+            {/* Location selector dropdown */}
+            <div className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+              >
+                <MapPin className="w-4 h-4 text-emerald-600" />
+                <span className="font-label-md text-label-md font-semibold text-on-surface">
+                  {selectedCity}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
+
+              {cityDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Select City
+                  </div>
+                  {CITIES_LIST.map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => handleSelectCity(city)}
+                      className={`w-full text-left px-3 py-1.5 text-xs font-semibold transition ${
+                        selectedCity === city
+                          ? 'text-emerald-700 bg-emerald-50 font-bold'
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Quick search shortcut */}
-            <Link
-              href="/venues"
+            {/* Quick search shortcut modal trigger */}
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
               className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">search</span>
+              <Search className="w-4 h-4" />
               <span className="font-label-md text-label-md">Quick Search</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-data-mono text-body-sm shadow-[0_1px_2px_rgba(0,0,0,0.08)]">⌘K</kbd>
-            </Link>
+              <kbd className="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-data-mono text-body-sm shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+                {isMac ? '⌘K' : 'Ctrl+K'}
+              </kbd>
+            </button>
 
             {/* List Your Facility (Owner CTA) */}
             <Link
@@ -410,13 +515,27 @@ export default function Navbar() {
           >
             Find Courts
           </Link>
-          <Link
-            href="/venues?sport=Badminton"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
-          >
-            Sports
-          </Link>
+
+          {/* Mobile All Sports List */}
+          <div className="py-2 border-y border-surface-container-high/60 my-1">
+            <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Browse Sports
+            </div>
+            <div className="grid grid-cols-2 gap-1 px-1 mt-1">
+              {SPORTS_LIST.map((s) => (
+                <Link
+                  key={s.slug}
+                  href={`/venues?sport=${encodeURIComponent(s.slug)}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-surface-container flex items-center gap-2"
+                >
+                  <span>{s.icon}</span>
+                  <span className="truncate">{s.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
           <Link
             href="/rewards"
             onClick={() => setMobileMenuOpen(false)}
@@ -476,6 +595,9 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+      {/* Quick Search Modal (Ctrl+K / ⌘K) */}
+      <QuickSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }

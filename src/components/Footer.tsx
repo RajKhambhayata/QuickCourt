@@ -26,7 +26,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2 text-xs text-primary-fixed font-semibold">
               <span className="material-symbols-outlined text-[16px]">verified</span>
-              <span>100% Verified Venues &amp; Instant WhatsApp Passes</span>
+              <span>100% Verified Venues &amp; Instant Digital Passes</span>
             </div>
           </div>
 
@@ -37,23 +37,23 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 font-body-sm text-sm text-tertiary-fixed">
               <li>
-                <Link href="/venues?sport=Badminton" className="hover:text-primary-container transition-colors">
+                <Link href="/venues?sport=badminton" className="hover:text-primary-container transition-colors">
                   Badminton (BWF Synthetic)
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Box Cricket" className="hover:text-primary-container transition-colors">
+                <Link href="/venues?sport=box-cricket" className="hover:text-primary-container transition-colors">
                   Box Cricket &amp; Roofed Turfs
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Pickleball" className="hover:text-primary-container transition-colors flex items-center gap-1.5">
+                <Link href="/venues?sport=pickleball" className="hover:text-primary-container transition-colors flex items-center gap-1.5">
                   <span>Pickleball Clubs</span>
                   <span className="px-1.5 py-0.2 rounded bg-primary-container text-on-primary-container text-[10px] font-bold">HOT</span>
                 </Link>
               </li>
               <li>
-                <Link href="/venues?sport=Tennis" className="hover:text-primary-container transition-colors">
+                <Link href="/venues?sport=tennis" className="hover:text-primary-container transition-colors">
                   Lawn Tennis &amp; Clay Courts
                 </Link>
               </li>

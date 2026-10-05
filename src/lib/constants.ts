@@ -169,3 +169,21 @@ export const CITIES_LIST = [
   'Ahmedabad',
   'Kolkata',
 ];
+
+export const CITY_AREAS: Record<string, string[]> = {
+  'Bangalore': ['Indiranagar', 'Koramangala', 'HSR Layout', 'Whitefield', 'JP Nagar', 'Bellandur'],
+  'Bengaluru': ['Indiranagar', 'Koramangala', 'HSR Layout', 'Whitefield', 'JP Nagar', 'Bellandur'],
+  'Mumbai': ['Andheri', 'Bandra', 'Powai', 'Juhu', 'Worli', 'Thane'],
+  'Delhi NCR': ['Gurugram', 'Noida', 'South Delhi', 'Dwarka', 'Vasant Kunj'],
+  'Hyderabad': ['Gachibowli', 'Hitec City', 'Madhapur', 'Jubilee Hills', 'Kondapur'],
+  'Pune': ['Kothrud', 'Baner', 'Viman Nagar', 'Wakad', 'Hinjewadi'],
+  'Chennai': ['Adyar', 'Velachery', 'Anna Nagar', 'OMR', 'T. Nagar'],
+  'Ahmedabad': ['Bodakdev', 'Satellite', 'Prahlad Nagar', 'Navrangpura', 'SG Highway'],
+  'Kolkata': ['Salt Lake', 'New Town', 'Ballygunge', 'Park Street', 'Alipore'],
+};
+
+export function getCityAreas(city: string | null | undefined): string[] {
+  if (!city || city === 'All') return CITY_AREAS['Bangalore'];
+  return CITY_AREAS[city] || CITY_AREAS['Bangalore'];
+}
+

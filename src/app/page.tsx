@@ -69,16 +69,39 @@ async function getFeaturedVenues(): Promise<{ venues: FacilityWithDetails[]; err
   }
 }
 
+async function getSportCourtCounts(): Promise<Record<string, number>> {
+  try {
+    const counts = await prisma.court.groupBy({
+      by: ['sportType'],
+      where: {
+        isActive: true,
+        facility: { status: 'APPROVED' },
+      },
+      _count: { id: true },
+    });
+    const map: Record<string, number> = {};
+    counts.forEach((c) => {
+      map[c.sportType] = c._count.id;
+    });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export default async function HomePage() {
-  const { venues, error: venuesError } = await getFeaturedVenues();
+  const [{ venues, error: venuesError }, courtCounts] = await Promise.all([
+    getFeaturedVenues(),
+    getSportCourtCounts(),
+  ]);
 
   return (
     <div className="space-y-0 pb-20 bg-background text-on-surface">
       {/* 1. Kinetic Hero Section */}
       <HeroSection />
 
-      {/* 2. 8 Sports Discipline Grid */}
-      <SportsCategoryPills />
+      {/* 2. 8 Sports Discipline Grid with Real DB Counts */}
+      <SportsCategoryPills courtCounts={courtCounts} />
 
       {/* 3. How It Works in 3 Taps */}
       <section className="bg-surface-container-low py-16 w-full border-y border-surface-container-high/60">
@@ -91,7 +114,7 @@ export default async function HomePage() {
               Booked to Battling in 3 Steps
             </h2>
             <p className="font-body-md text-body-md text-tertiary mt-2">
-              Zero phone calls, zero double-booked court disputes. Direct hardware integration locks your court instantly.
+              Zero phone calls, zero double-booked court disputes. Live slot matrix locks your court instantly.
             </p>
           </div>
 
@@ -154,16 +177,16 @@ export default async function HomePage() {
                   <span className="material-symbols-outlined text-[28px] text-secondary-container">qr_code_scanner</span>
                 </div>
                 <h3 className="font-headline-sm text-headline-sm text-on-surface mb-2 font-bold">
-                  Flash QR &amp; Smash
+                  Instant Digital Pass
                 </h3>
                 <p className="font-body-md text-body-md text-tertiary leading-relaxed">
-                  Get an instant WhatsApp entry pass with QR code and turnstile pin. Walk right past the reception desk directly onto your court.
+                  Receive an instant digital entry pass with QR code and booking reference. Walk right in directly onto your court.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-surface-container-high/40">
                 <div className="flex items-center gap-2 text-primary font-label-md text-label-md font-semibold">
-                  <span className="material-symbols-outlined text-[16px]">chat</span>
-                  <span>Direct WhatsApp Ticket Sync</span>
+                  <span className="material-symbols-outlined text-[16px]">confirmation_number</span>
+                  <span>Instant Pass on Confirmation</span>
                 </div>
               </div>
             </div>
@@ -238,7 +261,7 @@ export default async function HomePage() {
               List Your Arena &amp; Turn Zero-Show Slots Into Revenue
             </h2>
             <p className="font-body-md text-body-md text-tertiary-fixed leading-relaxed">
-              Join leading sports facilities using QuickCourt's zero double-booking live slot matrix, hardware lighting automation, and instant turnstile access control.
+              Join leading sports facilities using QuickCourt's zero double-booking live slot matrix, automated hold locks, and digital booking management.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link
@@ -275,7 +298,7 @@ export default async function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-container text-[18px]">check_circle</span>
-              <span>Live hardware lights &amp; gate controls</span>
+              <span>Digital slot scheduling &amp; member passes</span>
             </div>
           </div>
         </div>

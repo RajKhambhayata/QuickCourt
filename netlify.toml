@@ -7,6 +7,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # NEXT_PUBLIC_* values are intentionally inlined into client bundles, so they are not secrets
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL"
   JWT_SECRET = "quickcourt-fallback-secret-key-32chars-min-len"
   DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
   DIRECT_URL = "postgresql://postgres:postgres@localhost:5432/postgres"

@@ -8,8 +8,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # NEXT_PUBLIC_* values are intentionally inlined into client bundles, so they are not secrets
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL"
   JWT_SECRET = "quickcourt-fallback-secret-key-32chars-min-len"
   SECRETS_SCAN_ENABLED = "false"
-  SECRETS_SCAN_OMIT_KEYS = "ADMIN_SECRET_KEY,DATABASE_URL,DIRECT_URL,JWT_SECRET,OTP_SECRET"
+  SECRETS_SCAN_OMIT_KEYS = "ADMIN_SECRET_KEY,DATABASE_URL,DIRECT_URL,JWT_SECRET,OTP_SECRET,NEXT_PUBLIC_APP_URL"

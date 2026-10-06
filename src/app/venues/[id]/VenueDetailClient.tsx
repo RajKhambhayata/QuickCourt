@@ -140,22 +140,31 @@ export default function VenueDetailClient({ venue }: VenueDetailClientProps) {
         </div>
 
         {/* Venue Gallery Bento */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-2xl overflow-hidden mb-6 shadow-md max-h-[460px]">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-2xl overflow-hidden mb-6 shadow-md md:max-h-[460px]">
           {/* Main Hero Shot */}
-          <div className="md:col-span-2 lg:col-span-3 relative h-72 md:h-full group overflow-hidden bg-surface-container">
+          <div className="md:col-span-2 lg:col-span-3 relative h-64 sm:h-80 md:h-full group overflow-hidden bg-surface-container">
             <img
               src={images[activeImageIndex] || images[0]}
               alt={venue.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-label-md">
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-xs sm:text-label-md">
               <span>{sportMeta?.icon || '🏸'}</span>
-              <span>Court Fleet • BWF &amp; Pro Tournament Grade</span>
+              <span className="truncate max-w-[180px] sm:max-w-none">Court Fleet • BWF Grade</span>
             </div>
+            {/* Mobile photo toggle button */}
+            <button
+              onClick={() => setActiveImageIndex((activeImageIndex + 1) % images.length)}
+              className="md:hidden absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-inverse-surface/85 backdrop-blur-md text-inverse-on-surface font-label-md text-xs shadow-md"
+              type="button"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>{activeImageIndex + 1}/{images.length}</span>
+            </button>
           </div>
 
-          {/* Secondary Vertical Shot */}
+          {/* Secondary Vertical Shot (Tablet & Desktop) */}
           <div className="relative h-44 md:h-full hidden md:block group overflow-hidden bg-surface-container">
             <img
               src={images[1] || images[0]}
@@ -167,8 +176,8 @@ export default function VenueDetailClient({ venue }: VenueDetailClientProps) {
             </div>
           </div>
 
-          {/* Stacked Right Tiles */}
-          <div className="flex flex-col gap-2 lg:col-span-2">
+          {/* Stacked Right Tiles (Tablet & Desktop) */}
+          <div className="hidden md:flex flex-col gap-2 lg:col-span-2">
             <div className="relative h-[146px] group overflow-hidden bg-surface-container rounded-lg">
               <img
                 src={images[2] || images[0]}

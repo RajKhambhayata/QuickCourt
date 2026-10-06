@@ -119,33 +119,37 @@ export default function KartingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Link href="/rewards" className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition">
-            <ChevronLeft className="w-4 h-4 text-slate-300" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-black text-white flex items-center gap-2">
-              <Zap className="w-6 h-6 text-rose-400" />
-              Karting Heats
-            </h1>
-            <p className="text-xs text-slate-400">Multi-seat speed sessions — book your race slot!</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link href="/rewards" className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition shrink-0">
+              <ChevronLeft className="w-4 h-4 text-slate-300" />
+            </Link>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-rose-400" />
+                Karting Heats
+              </h1>
+              <p className="text-xs text-slate-400">Multi-seat speed sessions — book your race slot!</p>
+            </div>
           </div>
           <Link
             href="/karting/championship"
-            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/20 border border-amber-700 hover:bg-amber-600/30 text-amber-300 text-xs font-bold rounded-xl transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600/20 border border-amber-700 hover:bg-amber-600/30 text-amber-300 text-xs font-bold rounded-xl transition shrink-0"
           >
             <Trophy className="w-3.5 h-3.5" /> F1 Championship
           </Link>
         </div>
 
         {/* Kart Class Legend */}
-        <div className="flex gap-2 flex-wrap">
-          {Object.values(CLASS_STYLES).map((c) => (
-            <span key={c.label} className={`px-3 py-1 text-xs font-bold rounded-full ring-1 ${c.bg} ${c.ring} ${c.color}`}>
-              {c.label}
-            </span>
-          ))}
-          <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-800 text-slate-400 ring-1 ring-slate-700 ml-auto flex items-center gap-1">
+        <div className="flex gap-2 flex-wrap items-center justify-between">
+          <div className="flex gap-1.5 sm:gap-2 flex-wrap items-center">
+            {Object.values(CLASS_STYLES).map((c) => (
+              <span key={c.label} className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-full ring-1 ${c.bg} ${c.ring} ${c.color}`}>
+                {c.label}
+              </span>
+            ))}
+          </div>
+          <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-800 text-slate-400 ring-1 ring-slate-700 flex items-center gap-1 shrink-0">
             <Calendar className="w-3 h-3" /> {today}
           </span>
         </div>

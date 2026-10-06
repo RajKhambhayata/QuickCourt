@@ -84,7 +84,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-surface-container-high/60 shadow-[0_1px_8px_rgba(11,28,48,0.06)] transition-all">
       <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-10">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-3 md:gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-lg bg-inverse-surface flex items-center justify-center text-primary-container shadow-[0_2px_8px_rgba(0,230,118,0.25)] group-hover:scale-105 transition-transform">
@@ -285,7 +285,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Quick search shortcut modal trigger */}
+            {/* Quick search shortcut modal trigger (Desktop) */}
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
@@ -296,6 +296,16 @@ export default function Navbar() {
               <kbd className="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-data-mono text-body-sm shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
                 {isMac ? '⌘K' : 'Ctrl+K'}
               </kbd>
+            </button>
+
+            {/* Quick search icon trigger (Mobile / Small Tablet) */}
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="md:hidden p-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+              aria-label="Quick Search"
+            >
+              <Search className="w-4 h-4" />
             </button>
 
             {/* List Your Facility (Owner CTA) */}
@@ -311,10 +321,10 @@ export default function Navbar() {
             <button
               aria-label="Notifications"
               type="button"
-              className="relative w-10 h-10 rounded-lg flex items-center justify-center bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors shrink-0"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest" />
+              <span className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-2 h-2 rounded-full bg-secondary-container ring-2 ring-surface-container-lowest" />
             </button>
 
             {/* User Profile or Login/Signup */}
@@ -400,109 +410,120 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                {/* Login Dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginDropdownOpen(!loginDropdownOpen);
-                      setSignupDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-1 px-3 py-2 font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
-                  >
-                    <span>Log In</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Desktop/Tablet Login & Signup */}
+                <div className="hidden sm:flex items-center gap-2">
+                  {/* Login Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginDropdownOpen(!loginDropdownOpen);
+                        setSignupDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
+                    >
+                      <span>Log In</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
 
-                  {loginDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
-                      <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Select Portal</p>
-                      <Link
-                        href="/player/login"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-                      >
-                        <span className="text-base">🏸</span>
-                        <div>
-                          <div>Player Login</div>
-                          <div className="text-[10px] text-tertiary font-normal">Book &amp; play</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/owner/login"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-                      >
-                        <Building2 className="w-4 h-4 text-teal-600" />
-                        <div>
-                          <div>Facility Owner</div>
-                          <div className="text-[10px] text-tertiary font-normal">Manage turfs</div>
-                        </div>
-                      </Link>
-                      <div className="border-t border-surface-container-high my-1" />
-                      <Link
-                        href="/admin/login"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-                      >
-                        <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                        <div>
-                          <div>Super Admin</div>
-                          <div className="text-[10px] text-tertiary font-normal">Platform control</div>
-                        </div>
-                      </Link>
-                    </div>
-                  )}
+                    {loginDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-52 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
+                        <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Select Portal</p>
+                        <Link
+                          href="/player/login"
+                          onClick={() => setLoginDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+                        >
+                          <span className="text-base">🏸</span>
+                          <div>
+                            <div>Player Login</div>
+                            <div className="text-[10px] text-tertiary font-normal">Book &amp; play</div>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/owner/login"
+                          onClick={() => setLoginDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+                        >
+                          <Building2 className="w-4 h-4 text-teal-600" />
+                          <div>
+                            <div>Facility Owner</div>
+                            <div className="text-[10px] text-tertiary font-normal">Manage turfs</div>
+                          </div>
+                        </Link>
+                        <div className="border-t border-surface-container-high my-1" />
+                        <Link
+                          href="/admin/login"
+                          onClick={() => setLoginDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                          <div>
+                            <div>Super Admin</div>
+                            <div className="text-[10px] text-tertiary font-normal">Platform control</div>
+                          </div>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sign Up Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignupDropdownOpen(!signupDropdownOpen);
+                        setLoginDropdownOpen(false);
+                      }}
+                      className="px-4 py-2 text-xs font-extrabold text-on-primary-container bg-primary-container hover:bg-inverse-primary rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Sign Up</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+
+                    {signupDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
+                        <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Create Account</p>
+                        <Link
+                          href="/player/signup"
+                          onClick={() => setSignupDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+                        >
+                          <span className="text-base">🏸</span>
+                          <div>
+                            <div>Player Account</div>
+                            <div className="text-[10px] text-tertiary font-normal">Free registration</div>
+                          </div>
+                        </Link>
+                        <Link
+                          href="/owner/signup"
+                          onClick={() => setSignupDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
+                        >
+                          <Building2 className="w-4 h-4 text-teal-600" />
+                          <div>
+                            <div>Facility Owner</div>
+                            <div className="text-[10px] text-tertiary font-normal">List arena &amp; turfs</div>
+                          </div>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Sign Up Dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignupDropdownOpen(!signupDropdownOpen);
-                      setLoginDropdownOpen(false);
-                    }}
-                    className="px-4 py-2 text-xs font-extrabold text-on-primary-container bg-primary-container hover:bg-inverse-primary rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Sign Up</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-
-                  {signupDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high py-2 z-50">
-                      <p className="px-4 py-1 text-[10px] font-bold text-tertiary uppercase tracking-wider">Create Account</p>
-                      <Link
-                        href="/player/signup"
-                        onClick={() => setSignupDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-                      >
-                        <span className="text-base">🏸</span>
-                        <div>
-                          <div>Player Account</div>
-                          <div className="text-[10px] text-tertiary font-normal">Free registration</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/owner/signup"
-                        onClick={() => setSignupDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors"
-                      >
-                        <Building2 className="w-4 h-4 text-teal-600" />
-                        <div>
-                          <div>Facility Owner</div>
-                          <div className="text-[10px] text-tertiary font-normal">List arena &amp; turfs</div>
-                        </div>
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                {/* Mobile Small Screen Log In button */}
+                <Link
+                  href="/player/login"
+                  className="sm:hidden px-2.5 py-1.5 text-xs font-bold text-on-primary-container bg-primary-container rounded-lg"
+                >
+                  Log In
+                </Link>
               </div>
             )}
 
             {/* Mobile menu hamburger */}
-            <div className="flex xl:hidden items-center ml-1">
+            <div className="flex xl:hidden items-center ml-0.5 sm:ml-1">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -518,7 +539,42 @@ export default function Navbar() {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-surface-container-high bg-surface-container-lowest px-4 py-4 space-y-1 animate-in slide-in-from-top-2">
+        <div className="xl:hidden border-t border-surface-container-high bg-surface-container-lowest px-4 py-4 space-y-2 animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
+          {/* Mobile City Selector */}
+          <div className="flex items-center justify-between pb-3 border-b border-surface-container-high/60">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-on-surface">
+              <MapPin className="w-4 h-4 text-emerald-600" />
+              <span>City:</span>
+            </div>
+            <select
+              value={selectedCity}
+              onChange={(e) => handleSelectCity(e.target.value)}
+              className="text-xs font-semibold bg-surface-container text-on-surface px-2.5 py-1.5 rounded-lg border border-surface-container-high outline-none cursor-pointer"
+            >
+              {CITIES_LIST.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Mobile Quick Search Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setIsSearchOpen(true);
+            }}
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-container text-on-surface-variant font-medium text-xs hover:bg-surface-container-high transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-emerald-600" />
+              <span>Search sports, arenas, areas...</span>
+            </span>
+            <span className="text-[10px] bg-surface-container-lowest text-slate-500 px-1.5 py-0.5 rounded font-mono shadow-sm">
+              Search
+            </span>
+          </button>
+
           <Link
             href="/venues"
             onClick={() => setMobileMenuOpen(false)}
@@ -538,9 +594,9 @@ export default function Navbar() {
                   key={s.slug}
                   href={`/venues?sport=${encodeURIComponent(s.slug)}`}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-surface-container flex items-center gap-2"
+                  className="px-2.5 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-surface-container flex items-center gap-2"
                 >
-                  <span>{s.icon}</span>
+                  <span className="text-base">{s.icon}</span>
                   <span className="truncate">{s.name}</span>
                 </Link>
               ))}
@@ -552,56 +608,127 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
           >
-            Rewards
+            Rewards &amp; Coins
           </Link>
           <Link
             href="/karting"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
           >
-            Go-Karting
+            Go-Karting Heats
           </Link>
           <Link
             href="/games"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
           >
-            Games
+            Mini Games Arcade
           </Link>
           <Link
             href="/food-court"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
           >
-            Cafeteria
+            Cafeteria &amp; Refreshments
+          </Link>
+
+          {/* Facility Owner Banner CTA in Mobile Drawer */}
+          <Link
+            href="/owner/signup"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-secondary-container/20 border border-secondary-container/40 text-on-surface text-xs font-bold hover:bg-secondary-container/30 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-teal-700">
+              <Building2 className="w-4 h-4 text-teal-600" />
+              <span>List Your Facility (Owners)</span>
+            </span>
+            <span className="text-teal-700">→</span>
           </Link>
 
           {user && (
-            <Link
-              href="/profile"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
-            >
-              Profile Settings
-            </Link>
+            <div className="pt-2 border-t border-surface-container-high/60 space-y-1">
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+              >
+                Profile Settings
+              </Link>
+              {user.role === 'USER' && (
+                <Link
+                  href="/my-bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-on-surface hover:bg-surface-container"
+                >
+                  My Bookings
+                </Link>
+              )}
+              {user.role === 'OWNER' && (
+                <Link
+                  href="/owner/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-emerald-700 hover:bg-surface-container"
+                >
+                  Owner Dashboard
+                </Link>
+              )}
+              {user.role === 'ADMIN' && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg font-label-lg text-label-lg font-semibold text-indigo-700 hover:bg-surface-container"
+                >
+                  Admin Control Center
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50"
+              >
+                Sign Out
+              </button>
+            </div>
           )}
 
           {!user && (
-            <div className="pt-2 flex gap-2">
-              <Link
-                href="/player/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-1/2 text-center py-2 px-3 border border-surface-container-high rounded-lg text-xs font-bold text-on-surface"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/player/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-1/2 text-center py-2 px-3 bg-primary-container text-on-primary-container rounded-lg text-xs font-bold"
-              >
-                Sign Up
-              </Link>
+            <div className="pt-3 border-t border-surface-container-high/60 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/player/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-center py-2.5 px-3 border border-surface-container-high rounded-xl text-xs font-bold text-on-surface hover:bg-surface-container"
+                >
+                  Player Login
+                </Link>
+                <Link
+                  href="/player/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-center py-2.5 px-3 bg-primary-container text-on-primary-container rounded-xl text-xs font-bold hover:opacity-90"
+                >
+                  Sign Up Free
+                </Link>
+              </div>
+              <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-tertiary">
+                <Link
+                  href="/owner/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:underline flex items-center gap-1 text-slate-600"
+                >
+                  <Building2 className="w-3.5 h-3.5 text-teal-600" /> Owner Login
+                </Link>
+                <span>•</span>
+                <Link
+                  href="/admin/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:underline flex items-center gap-1 text-slate-600"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" /> Super Admin
+                </Link>
+              </div>
             </div>
           )}
         </div>

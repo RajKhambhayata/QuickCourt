@@ -142,12 +142,12 @@ export default function MyBookingsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm overflow-x-auto">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm overflow-x-auto no-scrollbar">
           {['ALL', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 ${
                 filterStatus === st
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -162,11 +162,11 @@ export default function MyBookingsPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 bg-white rounded-2xl border border-slate-200 animate-pulse p-6" />
+              <div key={i} className="h-40 bg-white rounded-2xl border border-slate-200 animate-pulse p-4 sm:p-6" />
             ))}
           </div>
         ) : bookings.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-4">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto" />
             <h3 className="text-lg font-bold text-slate-900">No bookings found</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -190,7 +190,7 @@ export default function MyBookingsPage() {
               return (
                 <div
                   key={booking.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-6"
+                  className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6"
                 >
                   {/* Left info */}
                   <div className="flex items-start gap-4">

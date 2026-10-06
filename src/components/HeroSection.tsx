@@ -69,21 +69,21 @@ export default function HeroSection() {
         </div>
 
         {/* Main Punch Headline */}
-        <div className="max-w-4xl mb-8">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+        <div className="max-w-4xl mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-3 sm:mb-4 leading-tight">
             Book Your Court in 3 Taps.<br />
             <span className="text-emerald-400 underline decoration-emerald-500/40 underline-offset-8">
               Play Tonight.
             </span>
           </h1>
-          <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl leading-relaxed">
             Discover verified badminton arenas, turf cricket grounds, pickleball courts, and racing circuits across India with live slot matrix confirmation.
           </p>
         </div>
 
         {/* Floating Booking Search Bar Card */}
-        <div className="p-4 md:p-6 rounded-2xl bg-slate-900/95 backdrop-blur-xl shadow-2xl text-slate-900 border border-slate-800">
-          <form className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center" onSubmit={handleSearch}>
+        <div className="p-3.5 sm:p-5 md:p-6 rounded-2xl bg-slate-900/95 backdrop-blur-xl shadow-2xl text-slate-900 border border-slate-800">
+          <form className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 sm:gap-3 items-center" onSubmit={handleSearch}>
             {/* City Selector */}
             <div className="lg:col-span-3 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 transition-colors">
               <div className="flex items-center justify-between">
@@ -182,7 +182,7 @@ export default function HeroSection() {
             <div className="lg:col-span-2 flex flex-col justify-center h-full">
               <button
                 type="submit"
-                className="w-full h-[68px] px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold shadow-lg transition-all flex flex-col items-center justify-center text-center cursor-pointer"
+                className="w-full h-14 sm:h-[68px] px-4 py-2 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold shadow-lg transition-all flex flex-col items-center justify-center text-center cursor-pointer"
               >
                 <span className="flex items-center gap-1 text-sm font-bold">
                   Find Courts
@@ -196,30 +196,38 @@ export default function HeroSection() {
           </form>
         </div>
 
-        {/* Live Platform Benefits Strip (Honest, Real Platform Features) */}
-        <div className="mt-6 pt-4 flex flex-wrap items-center justify-between gap-4 text-slate-400 text-xs border-t border-slate-800">
+        {/* Live Platform Benefits Strip */}
+        <div className="mt-6 pt-4 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-slate-400 text-xs border-t border-slate-800">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white font-bold">Live Matrix</span>
-            <span>Real-time slot availability sync</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <div className="min-w-0">
+              <span className="text-white font-bold block">Live Matrix</span>
+              <span className="text-[11px] text-slate-400 truncate block">Real-time slot sync</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-white font-bold">Verified Arenas</span>
-            <span>Inspected surfaces &amp; lighting</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <span className="text-white font-bold block">Verified Arenas</span>
+              <span className="text-[11px] text-slate-400 truncate block">Inspected courts</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-teal-400" />
-            <span className="text-white font-bold">10-Min Hold</span>
-            <span>Exclusive checkout reservation</span>
+            <Clock className="w-4 h-4 text-teal-400 shrink-0" />
+            <div className="min-w-0">
+              <span className="text-white font-bold block">10-Min Hold</span>
+              <span className="text-[11px] text-slate-400 truncate block">Cart reservation</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span className="text-white font-bold">Instant Pass</span>
-            <span>Direct QR pass on booking</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <span className="text-white font-bold block">Instant Pass</span>
+              <span className="text-[11px] text-slate-400 truncate block">Direct QR entry</span>
+            </div>
           </div>
         </div>
       </div>

@@ -88,13 +88,13 @@ export default function FoodCourtPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Link href="/rewards" className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition">
+          <Link href="/rewards" className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition shrink-0">
             <ChevronLeft className="w-4 h-4 text-slate-300" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-black text-white flex items-center gap-2">
-              <ShoppingBag className="w-6 h-6 text-orange-400" />
-              Food Court Partners
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2 truncate">
+              <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 shrink-0" />
+              <span>Food Court Partners</span>
             </h1>
             <p className="text-xs text-slate-400">Redeem your game-won vouchers at these outlets</p>
           </div>
@@ -147,11 +147,11 @@ export default function FoodCourtPage() {
                     <div>
                       <p className="text-white font-black text-base">{outlet.name}</p>
                       <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3" /> {outlet.address}, {outlet.city}
+                        <MapPin className="w-3 h-3 shrink-0" /> {outlet.address}, {outlet.city}
                       </p>
                       {outlet.phone && (
                         <p className="text-slate-500 text-xs flex items-center gap-1">
-                          <Phone className="w-3 h-3" /> {outlet.phone}
+                          <Phone className="w-3 h-3 shrink-0" /> {outlet.phone}
                         </p>
                       )}
                     </div>
@@ -160,14 +160,14 @@ export default function FoodCourtPage() {
                     <div className="space-y-1">
                       <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Menu Highlights</p>
                       {outlet.menuItems.slice(0, 3).map((item) => (
-                        <div key={item.id} className="flex items-center justify-between">
-                          <div>
-                            <span className="text-slate-300 text-xs">{item.name}</span>
+                        <div key={item.id} className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="text-slate-300 text-xs truncate inline-block max-w-[200px] align-bottom">{item.name}</span>
                             {item.tag && (
                               <span className="ml-1.5 text-[10px] text-orange-400 font-semibold">• {item.tag}</span>
                             )}
                           </div>
-                          <span className="text-white font-bold text-xs">₹{item.price}</span>
+                          <span className="text-white font-bold text-xs shrink-0">₹{item.price}</span>
                         </div>
                       ))}
                       {outlet.menuItems.length > 3 && (

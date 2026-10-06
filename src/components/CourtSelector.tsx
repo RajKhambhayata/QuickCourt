@@ -265,7 +265,7 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+        <div className="flex md:grid md:grid-cols-7 gap-2 overflow-x-auto pb-2 no-scrollbar">
           {availableDates.map((item) => {
             const isSelected = item.dateStr === selectedDate;
             return (
@@ -273,14 +273,14 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
                 key={item.dateStr}
                 onClick={() => setSelectedDate(item.dateStr)}
                 type="button"
-                className={`flex flex-col items-center py-2.5 px-2 rounded-lg transition-all relative ${
+                className={`flex flex-col items-center py-2 px-2 rounded-xl transition-all relative shrink-0 min-w-[76px] sm:min-w-[84px] md:min-w-0 md:shrink ${
                   isSelected
                     ? 'bg-primary text-on-primary shadow-md'
                     : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
                 }`}
               >
                 <span
-                  className={`font-label-md text-label-md uppercase tracking-wider font-semibold ${
+                  className={`font-label-md text-xs uppercase tracking-wider font-semibold ${
                     isSelected
                       ? 'text-primary-fixed'
                       : item.isWeekend
@@ -290,9 +290,9 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
                 >
                   {item.dayName}
                 </span>
-                <span className="font-headline-sm text-headline-sm font-bold">{item.formattedDate}</span>
+                <span className="font-headline-sm text-sm sm:text-headline-sm font-bold">{item.formattedDate}</span>
                 <span
-                  className={`font-body-sm text-[11px] ${
+                  className={`font-body-sm text-[10px] sm:text-[11px] ${
                     isSelected
                       ? 'text-on-primary/80'
                       : item.isWeekend
@@ -300,10 +300,10 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
                       : 'text-on-surface-variant'
                   }`}
                 >
-                  {item.isWeekend ? 'Peak Days' : 'Regular'}
+                  {item.isWeekend ? 'Peak' : 'Regular'}
                 </span>
                 <span
-                  className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                  className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
                     isSelected
                       ? 'bg-primary-container'
                       : item.isWeekend
@@ -319,8 +319,8 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
 
       {/* Color Legend Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-surface-container-low mb-6 font-label-md text-label-md border border-surface-container-high/40">
-        <span className="font-semibold text-on-surface">Slot Status:</span>
-        <div className="flex flex-wrap items-center gap-4">
+        <span className="font-semibold text-on-surface text-xs">Slot Status:</span>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="w-3.5 h-3.5 rounded bg-surface-container-lowest shadow-sm flex items-center justify-center border border-outline-variant/40">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -366,7 +366,7 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-primary text-[18px]">wb_sunny</span>
                 <h3 className="font-headline-sm text-headline-sm font-bold">Morning Slots</h3>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">(06:00 AM – 12:00 PM)</span>
+                <span className="font-body-sm text-xs text-on-surface-variant">(06:00 AM – 12:00 PM)</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 {morningSlots.map(renderSlotCard)}
@@ -380,7 +380,7 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-secondary text-[18px]">wb_twilight</span>
                 <h3 className="font-headline-sm text-headline-sm font-bold">Afternoon Slots</h3>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">(12:00 PM – 04:00 PM)</span>
+                <span className="font-body-sm text-xs text-on-surface-variant">(12:00 PM – 04:00 PM)</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 {afternoonSlots.map(renderSlotCard)}
@@ -394,7 +394,7 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-secondary-container text-[18px]">nightlight</span>
                 <h3 className="font-headline-sm text-headline-sm font-bold">Evening Peak Slots</h3>
-                <span className="font-body-sm text-body-sm text-secondary font-semibold">
+                <span className="font-body-sm text-xs text-secondary font-semibold">
                   (04:00 PM – 11:30 PM • Floodlit)
                 </span>
               </div>
@@ -408,30 +408,30 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
 
       {/* Sticky Bottom Booking Bar */}
       {selectedSlot && selectedCourt && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-container-high shadow-2xl p-4 transition-all animate-in slide-in-from-bottom-4">
-          <div className="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
-                <span className="material-symbols-outlined text-[20px]">check</span>
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-container-high shadow-2xl p-3 sm:p-4 pb-[max(env(safe-area-inset-bottom,0.75rem),0.75rem)] transition-all animate-in slide-in-from-bottom-4">
+          <div className="max-w-[1280px] mx-auto flex flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold shrink-0">
+                <span className="material-symbols-outlined text-[18px] sm:text-[20px]">check</span>
               </div>
-              <div>
-                <div className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
+              <div className="min-w-0">
+                <div className="font-headline-sm text-xs sm:text-headline-sm text-on-surface font-extrabold truncate">
                   {selectedCourt.name} • {selectedSlot.time}
                 </div>
-                <div className="flex items-center gap-2 font-body-sm text-body-sm text-tertiary">
-                  <span className="text-primary font-semibold">⚡ 10-min Cart Reservation Active</span>
-                  <span>•</span>
-                  <span>Date: {selectedDate}</span>
+                <div className="flex items-center gap-1.5 font-body-sm text-[11px] sm:text-body-sm text-tertiary">
+                  <span className="text-primary font-semibold truncate">⚡ 10-min Lock</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="hidden sm:inline">Date: {selectedDate}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
               <div className="text-right">
-                <span className="font-label-md text-[11px] uppercase font-bold text-tertiary tracking-wider block">
-                  Total (Taxes Included)
+                <span className="font-label-md text-[9px] sm:text-[11px] uppercase font-bold text-tertiary tracking-wider block leading-tight">
+                  Total
                 </span>
-                <div className="font-display text-2xl font-black text-on-surface tnum">
+                <div className="font-display text-lg sm:text-2xl font-black text-on-surface tnum">
                   ₹{selectedSlot.price}
                 </div>
               </div>
@@ -439,10 +439,10 @@ export default function CourtSelector({ courts, facilityName, onProceedToBooking
               <button
                 onClick={() => onProceedToBooking(selectedCourt, selectedSlot, selectedDate)}
                 type="button"
-                className="px-6 py-3 rounded-lg bg-secondary-container hover:bg-secondary-container/90 active:scale-[0.98] text-on-secondary font-label-lg text-label-lg font-bold shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-secondary-container hover:bg-secondary-container/90 active:scale-[0.98] text-on-secondary font-label-lg text-xs sm:text-label-lg font-bold shadow-lg transition-all flex items-center gap-1 sm:gap-2 cursor-pointer shrink-0"
               >
-                <span>Proceed to Instant Checkout</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span>Book Slot</span>
+                <span className="material-symbols-outlined text-[16px] sm:text-[18px]">arrow_forward</span>
               </button>
             </div>
           </div>

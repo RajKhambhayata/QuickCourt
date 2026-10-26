@@ -12,7 +12,12 @@ export async function POST(request: Request) {
       return rateLimitCheck.response;
     }
 
-    const rawBody = await request.json();
+    let rawBody: any;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Please enter a valid email address and password' }, { status: 400 });
+    }
     const validation = LoginSchema.safeParse(rawBody);
 
     if (!validation.success) {

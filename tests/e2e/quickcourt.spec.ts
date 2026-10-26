@@ -71,3 +71,36 @@ test.describe('1. Authentication & Route Protection (E2E)', () => {
     expect(isRequired !== null || (await page.locator('.text-red-500, [role="alert"]').count()) > 0).toBeTruthy();
   });
 });
+
+test.describe('4. Features & New Modules (Food Court, Karting, Games, Rewards)', () => {
+  test('should_render_food_court_outlets_and_menu_items', async ({ page }) => {
+    await page.goto('/food-court');
+    await expect(page).toHaveTitle(/Food Court/i);
+    await expect(page.locator('text=The Food Court').first()).toBeVisible();
+    await expect(page.locator('text=CourtSide Brew & Bowls').first()).toBeVisible();
+  });
+
+  test('should_render_karting_heats_and_championship_standings', async ({ page }) => {
+    await page.goto('/karting');
+    await expect(page).toHaveTitle(/Go-Karting/i);
+    await expect(page.locator('text=Track sessions').first()).toBeVisible();
+
+    await page.goto('/karting/championship');
+    await expect(page).toHaveTitle(/Championship/i);
+    await expect(page.locator('text=The Leaderboard').first()).toBeVisible();
+  });
+
+  test('should_render_arcade_games_and_minigame_tabs', async ({ page }) => {
+    await page.goto('/games');
+    await expect(page).toHaveTitle(/Arcade/i);
+    await expect(page.locator('text=Smash Rally').first()).toBeVisible();
+    await expect(page.locator('text=Daily Wheel').first()).toBeVisible();
+  });
+
+  test('should_render_club_rewards_desk_and_streaks', async ({ page }) => {
+    await page.goto('/rewards');
+    await expect(page).toHaveTitle(/Rewards/i);
+    await expect(page.locator('text=Your Perks & Vouchers').first()).toBeVisible();
+    await expect(page.locator('text=Daily Play Streak').first()).toBeVisible();
+  });
+});

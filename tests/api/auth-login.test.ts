@@ -47,13 +47,13 @@ describe('1. Authentication & User Management - API Route', () => {
       }),
     });
 
-    const response = await POST(request);
+    const response = (await POST(request))!;
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.user.email).toBe('player@example.com');
-    expect(response.cookies.get('qc_token')?.value).toBe('mock_jwt_token');
+    expect((response as any).cookies.get('qc_token')?.value).toBe('mock_jwt_token');
   });
 
   it('should_reject_invalid_password', async () => {
@@ -73,7 +73,7 @@ describe('1. Authentication & User Management - API Route', () => {
       }),
     });
 
-    const response = await POST(request);
+    const response = (await POST(request))!;
     const body = await response.json();
 
     expect(response.status).toBe(401);
@@ -97,7 +97,7 @@ describe('1. Authentication & User Management - API Route', () => {
       }),
     });
 
-    const response = await POST(request);
+    const response = (await POST(request))!;
     const body = await response.json();
 
     expect(response.status).toBe(401);
@@ -115,7 +115,7 @@ describe('1. Authentication & User Management - API Route', () => {
       }),
     });
 
-    const response = await POST(request);
+    const response = (await POST(request))!;
     const body = await response.json();
 
     expect(response.status).toBe(400);

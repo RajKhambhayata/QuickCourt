@@ -66,27 +66,6 @@ export async function POST() {
     }
     if (user.role !== 'USER') return NextResponse.json({ error: 'Player account required' }, { status: 403 });
 
-    // Verify 24hr cooldown
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentSpin = await prisma.gameSession.findFirst({
-      where: {
-        userId: user.id,
-        gameType: 'SPIN_WHEEL',
-        isVerified: true,
-        startedAt: { gte: oneDayAgo },
-      },
-      orderBy: { startedAt: 'desc' },
-    });
-
-    if (recentSpin) {
-      const remainingMs = recentSpin.startedAt.getTime() + 24 * 60 * 60 * 1000 - Date.now();
-      const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
-      return NextResponse.json(
-        { error: `You have already used your Daily Spin. Next spin available in ${remainingHours}h.` },
-        { status: 429 }
-      );
-    }
-
     // Weighted random selection
     const totalWeight = SPIN_PRIZES.reduce((sum, p) => sum + p.weight, 0);
     let rand = Math.random() * totalWeight;
@@ -105,6 +84,19 @@ export async function POST() {
 
     // Reward processing in transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Serialize claims per account across requests, devices, and sessions.
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${user.id} FOR UPDATE`;
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentSpin = await tx.gameSession.findFirst({
+        where: { userId: user.id, gameType: 'SPIN_WHEEL', isVerified: true, startedAt: { gte: oneDayAgo } },
+        orderBy: { startedAt: 'desc' },
+      });
+      if (recentSpin) {
+        const remainingHours = Math.ceil((recentSpin.startedAt.getTime() + 86400000 - Date.now()) / 3600000);
+        const error = new Error(`You have already used your Daily Spin. Next spin available in ${remainingHours}h.`);
+        (error as any).status = 429;
+        throw error;
+      }
       let coupon = null;
 
       // 1. If coins awarded
@@ -192,8 +184,8 @@ export async function POST() {
       coupon: result.coupon,
       nextSpinAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in POST /api/games/spin:', error);
-    return NextResponse.json({ error: 'Failed to execute spin' }, { status: 500 });
+    return NextResponse.json({ error: error?.status === 429 ? error.message : 'Failed to execute spin' }, { status: error?.status || 500 });
   }
 }

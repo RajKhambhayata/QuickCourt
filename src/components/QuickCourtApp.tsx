@@ -44,6 +44,7 @@ import {
   HelpCircle,
   Tag,
   CircleDot,
+  LogOut,
 } from 'lucide-react';
 import {
   sports,
@@ -128,6 +129,14 @@ export default function QuickCourtApp({
   const [loginRole, setLoginRole] = useState<Role>(initialRole);
   const [name, setName] = useState<string>('Raj');
   const [userEmail, setUserEmail] = useState<string>('player@example.com');
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    avatar?: string | null;
+  } | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState<boolean>(false);
   const [approvals, setApprovals] = useState<Record<string, string>>({});
   const [blocked, setBlocked] = useState<string[]>([]);
   const [loadingBookings, setLoadingBookings] = useState<boolean>(false);
@@ -139,10 +148,40 @@ export default function QuickCourtApp({
       if (b) setBookings(JSON.parse(b));
       const c = localStorage.getItem('qc-coins');
       if (c) setCoins(Number(c));
+      const u = localStorage.getItem('qc-user');
+      if (u) {
+        const parsed = JSON.parse(u);
+        setCurrentUser(parsed);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.email) setUserEmail(parsed.email);
+        if (parsed.role === 'ADMIN') {
+          setRole('Admin');
+          setLoginRole('Admin');
+        } else if (parsed.role === 'OWNER') {
+          setRole('Owner');
+          setLoginRole('Owner');
+        } else {
+          setRole('Player');
+          setLoginRole('Player');
+        }
+      }
     } catch {
       // Ignore localStorage errors
     }
   }, []);
+
+  // Sync outside-click for user dropdown
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [userMenuOpen]);
 
   // Sync to localStorage
   useEffect(() => {
@@ -213,20 +252,50 @@ export default function QuickCourtApp({
     fetch('/api/auth/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.user) {
-          setName(data.user.name || 'Member');
-          setUserEmail(data.user.email || 'player@example.com');
-          if (data.user.role === 'ADMIN') {
-            setRole('Admin');
-            setLoginRole('Admin');
-          } else if (data.user.role === 'OWNER') {
-            setRole('Owner');
-            setLoginRole('Owner');
-          } else {
-            setRole('Player');
-            setLoginRole('Player');
-          }
+        if (!data?.user) {
+          setCurrentUser(null);
+          try {
+            localStorage.removeItem('qc-user');
+          } catch {}
+          return;
         }
+
+        setCurrentUser(data.user);
+        try {
+          localStorage.setItem('qc-user', JSON.stringify(data.user));
+        } catch {}
+        setName(data.user.name || 'Member');
+        setUserEmail(data.user.email || 'player@quickcourt.com');
+        if (data.user.role === 'ADMIN') {
+          setRole('Admin');
+          setLoginRole('Admin');
+        } else if (data.user.role === 'OWNER') {
+          setRole('Owner');
+          setLoginRole('Owner');
+        } else {
+          setRole('Player');
+          setLoginRole('Player');
+        }
+
+        // Booking history is private. Do not make a request that must return 401 for guests.
+        fetch('/api/bookings')
+          .then((res) => (res.ok ? res.json() : null))
+          .then((bookingData) => {
+            if (bookingData?.bookings?.length) {
+              const apiBookings: StarterBooking[] = bookingData.bookings.map((b: any) => ({
+                id: b.bookingNumber || b.id,
+                venue: b.court?.facility?.name || 'QuickCourt Arena',
+                court: b.court?.name || 'Court 1',
+                date: b.date,
+                time: b.startTime,
+                amount: b.totalAmount,
+                status: b.status === 'CONFIRMED' ? 'Confirmed' : b.status === 'CANCELLED' ? 'Cancelled' : 'Pending',
+                sport: b.court?.sportType || 'Badminton',
+              }));
+              setBookings(apiBookings);
+            }
+          })
+          .catch(() => {});
       })
       .catch(() => {});
 
@@ -263,25 +332,6 @@ export default function QuickCourtApp({
       })
       .catch(() => {});
 
-    // 3. User bookings
-    fetch('/api/bookings')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.bookings && data.bookings.length > 0) {
-          const apiBookings: StarterBooking[] = data.bookings.map((b: any) => ({
-            id: b.bookingNumber || b.id,
-            venue: b.court?.facility?.name || 'QuickCourt Arena',
-            court: b.court?.name || 'Court 1',
-            date: b.date,
-            time: b.startTime,
-            amount: b.totalAmount,
-            status: b.status === 'CONFIRMED' ? 'Confirmed' : b.status === 'CANCELLED' ? 'Cancelled' : 'Pending',
-            sport: b.court?.sportType || 'Badminton',
-          }));
-          setBookings(apiBookings);
-        }
-      })
-      .catch(() => {});
   }, []);
 
   const filtered = useMemo(
@@ -392,6 +442,22 @@ export default function QuickCourtApp({
     go('bookings', '/my-bookings');
   }
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('qc-user');
+    } catch {}
+    setName('Member');
+    setUserEmail('');
+    setUserMenuOpen(false);
+    setMobile(false);
+    say('Signed out successfully.');
+    go('home', '/');
+  };
+
   const nav = [
     ['Discover', 'home', '/'],
     ['Venues', 'venues', '/venues'],
@@ -437,29 +503,155 @@ export default function QuickCourtApp({
             ))}
           </nav>
 
-          <div className="desktop-nav flex gap-2 items-center">
-            <a
-              href="/player/login"
-              onClick={(e) => {
-                e.preventDefault();
-                setLoginRole('Player');
-                go('login', '/player/login');
-              }}
-              className="quiet px-4 py-2 text-xs flex items-center cursor-pointer"
-            >
-              Log in
-            </a>
-            <a
-              href="/player/signup"
-              onClick={(e) => {
-                e.preventDefault();
-                go('signup', '/player/signup');
-              }}
-              className="btn px-4 py-2 text-xs flex items-center cursor-pointer"
-            >
-              Join the club <ArrowRight className="ml-2 inline" size={13} />
-            </a>
-          </div>
+          {currentUser ? (
+            <div className="desktop-nav relative user-menu-container flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="flex items-center gap-2.5 rounded-full border rule py-1.5 px-3 hover:bg-[#e8e0ce]/70 transition text-left cursor-pointer"
+                aria-expanded={userMenuOpen}
+                aria-label="User account menu"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#173d2b] text-[11px] font-bold text-[#f3eedf]">
+                  {currentUser.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    (currentUser.name || name || 'RK').slice(0, 2).toUpperCase()
+                  )}
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold leading-tight text-[#17271f]">
+                    {currentUser.name || name}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#71856a]">
+                    {currentUser.role === 'ADMIN' ? 'Admin' : currentUser.role === 'OWNER' ? 'Owner' : 'Player'}
+                  </span>
+                </div>
+                <ChevronDown size={14} className={`text-[#71856a] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded border rule bg-[var(--paper)] p-2 shadow-xl z-50">
+                  <div className="border-b rule px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#71856a]">Signed in as</p>
+                    <p className="text-sm font-bold text-[#17271f] truncate">{currentUser.name || name}</p>
+                    <p className="text-xs text-[#687468] truncate">{currentUser.email || userEmail}</p>
+                    <span className="inline-block mt-1.5 px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase rounded bg-[#173d2b] text-[#f3eedf]">
+                      {currentUser.role === 'ADMIN' ? 'Administrator' : currentUser.role === 'OWNER' ? 'Venue Owner' : 'Club Member'}
+                    </span>
+                  </div>
+
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        go('profile', '/profile');
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-[#e8e0ce] transition rounded cursor-pointer"
+                    >
+                      <UserRound size={14} className="text-[#71856a]" />
+                      <span>My Profile</span>
+                    </button>
+
+                    {currentUser.role === 'USER' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          go('bookings', '/my-bookings');
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-[#e8e0ce] transition rounded cursor-pointer"
+                      >
+                        <CalendarDays size={14} className="text-[#71856a]" />
+                        <span>My Bookings</span>
+                      </button>
+                    )}
+
+                    {currentUser.role === 'OWNER' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          go('owner', '/owner/dashboard');
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-[#e8e0ce] transition rounded cursor-pointer"
+                      >
+                        <Building2 size={14} className="text-[#71856a]" />
+                        <span>Owner Dashboard</span>
+                      </button>
+                    )}
+
+                    {currentUser.role === 'ADMIN' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          go('admin', '/admin/dashboard');
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-[#e8e0ce] transition rounded cursor-pointer"
+                      >
+                        <ShieldCheck size={14} className="text-[#71856a]" />
+                        <span>Admin Dashboard</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        go('wallet', '/wallet');
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-left hover:bg-[#e8e0ce] transition rounded cursor-pointer"
+                    >
+                      <Wallet size={14} className="text-[#71856a]" />
+                      <span>Club Wallet ({coins} coins)</span>
+                    </button>
+                  </div>
+
+                  <div className="border-t rule pt-1">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition rounded font-semibold cursor-pointer"
+                    >
+                      <LogOut size={14} />
+                      <span>Log out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="desktop-nav flex gap-2 items-center">
+              <a
+                href="/player/login"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLoginRole('Player');
+                  go('login', '/player/login');
+                }}
+                className="quiet px-4 py-2 text-xs flex items-center cursor-pointer"
+              >
+                Log in
+              </a>
+              <a
+                href="/player/signup"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLoginRole('Player');
+                  go('signup', '/player/signup');
+                }}
+                className="btn px-4 py-2 text-xs flex items-center cursor-pointer"
+              >
+                Join the club <ArrowRight className="ml-2 inline" size={13} />
+              </a>
+            </div>
+          )}
 
           <button
             className="mobile-menu flex items-center justify-center p-2 rounded cursor-pointer border rule"
@@ -477,7 +669,9 @@ export default function QuickCourtApp({
             className="grid border-t rule px-5 py-3 md:hidden bg-[var(--paper)]"
           >
             <div className="flex justify-between items-center py-2 border-b rule mb-2">
-              <span className="eyebrow text-[#71856a]">QuickCourt Menu</span>
+              <span className="eyebrow text-[#71856a]">
+                {currentUser ? `Signed in as ${currentUser.name || name}` : 'QuickCourt Menu'}
+              </span>
               <button
                 onClick={() => setMobile(false)}
                 className="p-1 text-slate-700"
@@ -488,10 +682,22 @@ export default function QuickCourtApp({
             </div>
             {[
               ...nav,
-              ['Admin portal', 'admin', '/admin/dashboard'] as [string, Page, string],
-              ['Owner portal', 'owner', '/owner/dashboard'] as [string, Page, string],
-              ['Sign in', 'login', '/player/login'] as [string, Page, string],
-              ['Sign up', 'signup', '/player/signup'] as [string, Page, string],
+              ...(currentUser
+                ? [
+                    ['My Profile', 'profile', '/profile'] as [string, Page, string],
+                    ...(currentUser.role === 'ADMIN'
+                      ? [['Admin portal', 'admin', '/admin/dashboard'] as [string, Page, string]]
+                      : []),
+                    ...(currentUser.role === 'OWNER'
+                      ? [['Owner portal', 'owner', '/owner/dashboard'] as [string, Page, string]]
+                      : []),
+                  ]
+                : [
+                    ['Admin portal', 'admin', '/admin/dashboard'] as [string, Page, string],
+                    ['Owner portal', 'owner', '/owner/dashboard'] as [string, Page, string],
+                    ['Sign in', 'login', '/player/login'] as [string, Page, string],
+                    ['Sign up', 'signup', '/player/signup'] as [string, Page, string],
+                  ]),
             ].map(([n, p, href]) => (
               <a
                 key={p + href}
@@ -506,6 +712,15 @@ export default function QuickCourtApp({
                 <ArrowUpRight size={14} />
               </a>
             ))}
+            {currentUser && (
+              <button
+                onClick={handleLogout}
+                className="py-3 text-left text-sm text-red-600 flex items-center justify-between font-semibold border-t rule mt-1 cursor-pointer"
+              >
+                <span>Sign Out ({currentUser.name || name})</span>
+                <LogOut size={14} />
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -953,7 +1168,7 @@ export default function QuickCourtApp({
               <input
                 className="field"
                 type="date"
-                min="2026-10-14"
+                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)}
                 value={date}
                 onChange={(e) => {
                   setDate(e.target.value);
@@ -1243,6 +1458,13 @@ export default function QuickCourtApp({
   }
 
   function WalletPage() {
+    useEffect(() => {
+      fetch('/api/wallet')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => { if (data?.wallet) setCoins(data.wallet.coins); })
+        .catch(() => {});
+    }, []);
+
     return (
       <main className="mx-auto min-h-[60vh] max-w-[1000px] px-5 py-10 md:px-9 md:py-16">
         <div className="eyebrow">Your loyalty ledger</div>
@@ -1330,12 +1552,39 @@ export default function QuickCourtApp({
                 ))}
               </div>
             </div>
-            <button
-              onClick={() => say('Profile details saved.')}
-              className="btn mt-5 px-5 py-3 text-xs"
-            >
-              Save member details <Check className="ml-2 inline" size={14} />
-            </button>
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/auth/me', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name }),
+                    });
+                    const d = await res.json();
+                    if (d?.user) {
+                      setCurrentUser(d.user);
+                      try {
+                        localStorage.setItem('qc-user', JSON.stringify(d.user));
+                      } catch {}
+                    }
+                  } catch {}
+                  say('Profile details saved.');
+                }}
+                className="btn px-5 py-3 text-xs"
+              >
+                Save member details <Check className="ml-2 inline" size={14} />
+              </button>
+              {currentUser && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="quiet px-4 py-3 text-xs text-red-600 hover:bg-red-50"
+                >
+                  Sign Out
+                </button>
+              )}
+            </div>
           </section>
         </div>
       </main>
@@ -2871,18 +3120,31 @@ export default function QuickCourtApp({
       fetch('/api/rewards/summary')
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data?.coupons && data.coupons.length > 0) {
-            setCoupons(data.coupons);
+          if (data?.activeCoupons) {
+            setCoupons(data.activeCoupons);
           }
+          if (data?.wallet) setCoins(data.wallet.coins);
+          if (data?.dailyClaim) setStreakClaimed(data.dailyClaim.claimed);
         })
         .catch(() => {});
     }, []);
 
-    const handleClaimStreak = () => {
+    const handleClaimStreak = async () => {
       if (streakClaimed) return;
-      setCoins((c) => c + 25);
-      setStreakClaimed(true);
-      say('Daily streak claimed! +25 Court Coins credited.');
+      try {
+        const response = await fetch('/api/rewards/daily-claim', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) {
+          if (response.status === 429) setStreakClaimed(true);
+          say(data.error || 'Could not claim daily reward. Please sign in.');
+          return;
+        }
+        setCoins((c) => c + data.coinsAwarded);
+        setStreakClaimed(true);
+        say('Daily streak claimed! +25 Court Coins credited.');
+      } catch {
+        say('Could not claim daily reward. Check your connection and try again.');
+      }
     };
 
     return (
@@ -3019,10 +3281,10 @@ export default function QuickCourtApp({
   function Login() {
     const [loginEmail, setLoginEmail] = useState(
       loginRole === 'Player'
-        ? 'player@example.com'
+        ? 'player@quickcourt.com'
         : loginRole === 'Owner'
-        ? 'owner@example.com'
-        : 'admin@example.com'
+        ? 'owner@quickcourt.com'
+        : 'admin@quickcourt.com'
     );
     const [loginPassword, setLoginPassword] = useState('Password123!');
     const [loginLoading, setLoginLoading] = useState(false);
@@ -3055,6 +3317,10 @@ export default function QuickCourtApp({
         });
         const data = await res.json();
         if (res.ok && data.success) {
+          setCurrentUser(data.user);
+          try {
+            localStorage.setItem('qc-user', JSON.stringify(data.user));
+          } catch {}
           setRole(loginRole);
           setName(data.user.name || loginEmail.split('@')[0]);
           setUserEmail(data.user.email || loginEmail);
@@ -3108,6 +3374,18 @@ export default function QuickCourtApp({
           <div className="eyebrow">Member entrance · 01</div>
           <h2 className="display mt-3 text-4xl md:text-5xl">Welcome back.</h2>
           <div className="mt-7">
+            {currentUser && (
+              <div className="mb-4 p-3 border rule bg-[#e8e0ce]/70 text-xs text-[#17271f] flex items-center justify-between rounded">
+                <span>Already signed in as <strong>{currentUser.name}</strong> ({currentUser.email})</span>
+                <button
+                  type="button"
+                  onClick={() => go(currentUser.role === 'ADMIN' ? 'admin' : currentUser.role === 'OWNER' ? 'owner' : 'bookings')}
+                  className="font-bold underline ml-2 cursor-pointer"
+                >
+                  Dashboard →
+                </button>
+              </div>
+            )}
             <div className="eyebrow mb-3">Choose your desk</div>
             <div className="grid grid-cols-3 gap-2">
               {(['Player', 'Owner', 'Admin'] as Role[]).map((r) => (
@@ -3116,9 +3394,9 @@ export default function QuickCourtApp({
                   type="button"
                   onClick={() => {
                     setLoginRole(r);
-                    if (r === 'Player') setLoginEmail('player@example.com');
-                    else if (r === 'Owner') setLoginEmail('owner@example.com');
-                    else setLoginEmail('admin@example.com');
+                    if (r === 'Player') setLoginEmail('player@quickcourt.com');
+                    else if (r === 'Owner') setLoginEmail('owner@quickcourt.com');
+                    else setLoginEmail('admin@quickcourt.com');
                   }}
                   className={`quiet py-3 text-xs ${
                     loginRole === r ? 'bg-[#173d2b] text-white' : ''
@@ -3174,6 +3452,68 @@ export default function QuickCourtApp({
                 <ArrowRight size={16} />
               </button>
             </form>
+
+            <div className="mt-6 border-t rule pt-4 text-xs text-[#687468]">
+              <div className="font-semibold text-[#17271f] mb-1">Demo Credentials (click to fill):</div>
+              <div className="space-y-1 text-[11px]">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium text-[#17271f]">Player:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginRole('Player');
+                      setLoginEmail('player@quickcourt.com');
+                      setLoginPassword('Password123!');
+                    }}
+                    className="bg-[#e8e0ce] px-2 py-0.5 rounded font-mono text-[10px] text-[#173d2b] hover:bg-[#d5e69a] transition cursor-pointer"
+                  >
+                    player@quickcourt.com
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginRole('Player');
+                      setLoginEmail('rk1@gmail.com');
+                      setLoginPassword('Password123!');
+                    }}
+                    className="bg-[#e8e0ce] px-2 py-0.5 rounded font-mono text-[10px] text-[#173d2b] hover:bg-[#d5e69a] transition cursor-pointer"
+                  >
+                    rk1@gmail.com (rk)
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium text-[#17271f]">Owner:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginRole('Owner');
+                      setLoginEmail('owner@quickcourt.com');
+                      setLoginPassword('Password123!');
+                    }}
+                    className="bg-[#e8e0ce] px-2 py-0.5 rounded font-mono text-[10px] text-[#173d2b] hover:bg-[#d5e69a] transition cursor-pointer"
+                  >
+                    owner@quickcourt.com
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium text-[#17271f]">Admin:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginRole('Admin');
+                      setLoginEmail('admin@quickcourt.com');
+                      setLoginPassword('Password123!');
+                    }}
+                    className="bg-[#e8e0ce] px-2 py-0.5 rounded font-mono text-[10px] text-[#173d2b] hover:bg-[#d5e69a] transition cursor-pointer"
+                  >
+                    admin@quickcourt.com
+                  </button>
+                </div>
+                <div className="text-[10px] text-[#71856a] pt-1">
+                  Password: <strong>Password123!</strong>
+                </div>
+              </div>
+            </div>
 
             <div className="mt-4 text-center text-xs">
               New around here?{' '}

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickCourt — Smarter Sports & Turf Booking Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #173D2B;
+      color: #17271F;
+    }
+    .font-serif {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .slide-container {
+      aspect-ratio: 16 / 9;
+      max-width: 1200px;
+      max-height: 675px;
+    }
+    .slide {
+      display: none;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.99); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 select-none">
+
+  <!-- Header Bar -->
+  <header class="w-full max-w-[1200px] flex items-center justify-between py-2 px-4 mb-2 bg-[#1b4330] rounded-xl border border-emerald-800/60 shadow-lg text-emerald-100">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-[#d5e69a] flex items-center justify-center text-[#173d2b] font-bold text-lg shadow-inner">
+        ⚡
+      </div>
+      <div>
+        <h1 class="font-bold text-white text-sm sm:text-base leading-tight tracking-wide">QuickCourt</h1>
+        <p class="text-[11px] text-emerald-300 hidden sm:block">Modern Sports Venue, Turf & Leisure Experience</p>
+      </div>
+    </div>
+
+    <!-- Navigation & Download Controls -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <span id="slideIndicator" class="text-xs font-semibold px-3 py-1 rounded-full bg-[#173d2b] text-[#d5e69a] border border-emerald-700/60 shadow-sm">
+        1 / 10
+      </span>
+      <button id="prevBtn" class="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-medium transition shadow disabled:opacity-40 disabled:cursor-not-allowed">
+        ◀ Previous
+      </button>
+      <button id="nextBtn" class="text-xs sm:text-sm px-3.5 py-1.5 rounded-lg bg-[#d5e69a] hover:bg-[#c4d785] text-[#173d2b] font-bold transition shadow">
+        Next ▶
+      </button>
+      <a href="/QuickCourt_Project_Presentation.pptx" download class="text-xs px-3 py-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 transition flex items-center gap-1.5" title="Download PowerPoint Deck">
+        <span>📥 Download .PPTX</span>
+      </a>
+      <a href="/QuickCourt_Project_Partner_Handbook.pdf" download class="text-xs px-3 py-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 transition flex items-center gap-1.5" title="Download Partner Handbook PDF">
+        <span>📄 Partner PDF</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Slide Stage -->
+  <main class="w-full slide-container w-full bg-[#F7F3E8] rounded-2xl shadow-2xl overflow-hidden border border-emerald-900/40 relative flex flex-col justify-between">
+
+    <!-- ========================================== -->
+    <!-- SLIDE 1: Title & Overview -->
+    <!-- ========================================== -->
+    <div class="slide active w-full h-full flex-col justify-between p-8 sm:p-12 bg-[#173D2B] text-white">
+      <div class="flex flex-col items-start gap-3">
+        <span class="inline-block px-3 py-1 text-xs font-extrabold uppercase tracking-widest bg-[#D5E69A] text-[#173D2B] rounded-full">
+          SPORTS • LEISURE • REWARDS
+        </span>
+        <h2 class="font-serif text-4xl sm:text-6xl font-bold text-[#D5E69A] tracking-tight leading-tight mt-1">
+          QuickCourt
+        </h2>
+        <h3 class="text-xl sm:text-2xl text-emerald-100 font-medium">
+          The All-in-One Turf & Arena Booking Experience
+        </h3>
+        <p class="text-sm sm:text-base text-emerald-200/90 max-w-2xl mt-1 leading-relaxed">
+          From evening badminton matches to weekend Go-Karting heats and pre-ordered post-match smoothies — QuickCourt connects passionate players with premier sports facilities in seconds.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-auto">
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 flex items-center gap-3 shadow">
+          <div class="text-3xl">🏸</div>
+          <div>
+            <h4 class="font-bold text-[#D5E69A] text-sm">Instant Court Booking</h4>
+            <p class="text-xs text-emerald-200">Real-time slot calendar with 0 double bookings</p>
+          </div>
+        </div>
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 flex items-center gap-3 shadow">
+          <div class="text-3xl">🏎️</div>
+          <div>
+            <h4 class="font-bold text-[#D5E69A] text-sm">Go-Karting Heats</h4>
+            <p class="text-xs text-emerald-200">Pick your track, kart class & race schedule</p>
+          </div>
+        </div>
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 flex items-center gap-3 shadow">
+          <div class="text-3xl">🥤</div>
+          <div>
+            <h4 class="font-bold text-[#D5E69A] text-sm">Food & Coin Rewards</h4>
+            <p class="text-xs text-emerald-200">Pre-order shakes & earn 1 Coin = ₹1 discount</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-emerald-800/80 text-xs text-emerald-300">
+        <span>Presented by Raj Khambhayata & Team</span>
+        <span>QuickCourt Web Application</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 2: The Real-World Problem -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">CURRENT MARKET FRUSTRATION</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">The Problem: Booking a Turf Today is Chaos</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Sports enthusiasts lose hours every weekend trying to organize a single game with friends:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-6 h-6 rounded-md bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center">01</span>
+            <h3 class="font-bold text-stone-900 text-sm sm:text-base">Endless Calling & WhatsApp</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Managers do not answer phones during peak hours. Players spend 45 minutes messaging multiple venues just to see if a 7 PM slot is free.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-red-600">Impact: Wasted time & frustrated players</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-6 h-6 rounded-md bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center">02</span>
+            <h3 class="font-bold text-stone-900 text-sm sm:text-base">Clashing & Double Bookings</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Venues write bookings down in paper registers. Two groups frequently arrive at the same court at 8 PM, leading to heated arguments.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-red-600">Impact: Ruined weekend plans</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-6 h-6 rounded-md bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center">03</span>
+            <h3 class="font-bold text-stone-900 text-sm sm:text-base">Opaque Prices & Cash Hassle</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Weekend surge pricing is hidden. Split payments require endless UPI screenshots and awkward payment reminders among friends.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-red-600">Impact: Payment friction & awkward splits</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-6 h-6 rounded-md bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center">04</span>
+            <h3 class="font-bold text-stone-900 text-sm sm:text-base">Zero Post-Game Amenities</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Thirsty players stand in long food lines after intense 60-minute matches or discover the cafe is out of water and protein snacks.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-red-600">Impact: Disjointed player experience</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 2 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 3: The Solution -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">THE QUICKCOURT ADVANTAGE</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">The Solution: 1-Tap Booking, 100% Guaranteed</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">QuickCourt replaces paper diaries with a synchronized, high-speed web app that works effortlessly on phones and laptops:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-auto">
+        <div class="bg-white border border-emerald-900/10 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">⚡</div>
+            <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">INSTANT CONFIRMATION</span>
+            <h3 class="font-serif font-bold text-stone-900 text-base mt-1">Live Court Availability</h3>
+            <p class="text-xs text-stone-600 mt-2 leading-relaxed">Pick your sport, choose your preferred venue, and view exact open slots in real-time. What you see is guaranteed free.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-emerald-900/10 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">🛡️</div>
+            <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">CONFLICT-FREE</span>
+            <h3 class="font-serif font-bold text-stone-900 text-base mt-1">Zero Double Bookings</h3>
+            <p class="text-xs text-stone-600 mt-2 leading-relaxed">Automated atomic database reservations ensure that once you begin booking, the slot is locked and cannot be taken by anyone else.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-emerald-900/10 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">🍔</div>
+            <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">MATCH-READY</span>
+            <h3 class="font-serif font-bold text-stone-900 text-base mt-1">Integrated Pre-Orders</h3>
+            <p class="text-xs text-stone-600 mt-2 leading-relaxed">Select energy drinks, snacks, and electrolyte water to be chilled and waiting court-side when your 60-minute buzzer rings.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-emerald-900/10 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">💰</div>
+            <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">REAL SAVINGS</span>
+            <h3 class="font-serif font-bold text-stone-900 text-base mt-1">Earn While You Play</h3>
+            <p class="text-xs text-stone-600 mt-2 leading-relaxed">Every game earns Court Coins in your digital wallet. 1 Coin = ₹1 flat discount on any future court or food order.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 3 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 4: Real-World Example - Booking Flow -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">REAL-WORLD WALKTHROUGH</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Example: Booking a 7 PM Badminton Match</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Meet Rahul — he wants to play badminton with 3 college friends this Friday evening. Here is his 60-second journey:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-2">Step 1: Explore • 0:05s</span>
+            <h3 class="font-bold text-stone-900 text-sm mb-1">Pick Arena</h3>
+            <p class="text-xs text-stone-600 leading-relaxed">Rahul opens QuickCourt on his phone, filters by "Badminton" in his neighborhood, and selects "Smash Arena" with synthetic indoor courts.</p>
+          </div>
+          <div class="mt-3 p-2 bg-stone-50 rounded text-[11px] text-emerald-800 font-semibold border border-stone-200">
+            ✓ No phone calls needed
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-2">Step 2: Choose Slot • 0:20s</span>
+            <h3 class="font-bold text-stone-900 text-sm mb-1">Lock 7 PM</h3>
+            <p class="text-xs text-stone-600 leading-relaxed">He taps Friday, sees the 19:00 - 20:00 slot highlighted green on Court 1 (₹590/hr). He taps to reserve the slot instantly.</p>
+          </div>
+          <div class="mt-3 p-2 bg-stone-50 rounded text-[11px] text-emerald-800 font-semibold border border-stone-200">
+            ✓ Slot locked in 1 tap
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-2">Step 3: Refreshments • 0:35s</span>
+            <h3 class="font-bold text-stone-900 text-sm mb-1">Pre-Order Food</h3>
+            <p class="text-xs text-stone-600 leading-relaxed">QuickCourt suggests 2 Tender Coconut Waters and 2 Protein Energy Bars from CourtSide Cafe for ₹180. He adds them with 1 tap.</p>
+          </div>
+          <div class="mt-3 p-2 bg-stone-50 rounded text-[11px] text-emerald-800 font-semibold border border-stone-200">
+            ✓ Snacks ready upon arrival
+          </div>
+        </div>
+
+        <div class="bg-white border-2 border-orange-300 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-orange-100 text-orange-800 mb-2">Step 4: Confirm • 0:50s</span>
+            <h3 class="font-bold text-stone-900 text-sm mb-1">Redeem & Play</h3>
+            <p class="text-xs text-stone-600 leading-relaxed">At checkout, Rahul applies 50 Court Coins for ₹50 off. Booking reference QC-2026-1P7SUA2D and QR pass are generated immediately.</p>
+          </div>
+          <div class="mt-3 p-2 bg-orange-50 rounded text-[11px] text-orange-800 font-semibold border border-orange-200">
+            ✓ Ticket & QR code ready
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 4 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 5: Go-Karting & Motor Racing -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">HIGH-SPEED EXCITEMENT</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Go-Karting: Heat Formats & Pit Lane Scheduling</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Beyond regular turf sports, QuickCourt features a dedicated motor racing hub for Go-Karting tracks:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+          <h3 class="font-serif font-bold text-base text-stone-900 mb-2">🏎️ Velocity Circuit — Asphalt Sprint Track</h3>
+          <p class="text-xs text-stone-600 leading-relaxed mb-4">850m championship track with 11 technical corners, high-speed straights, and modern electric karts with instantaneous torque.</p>
+          <div class="space-y-2">
+            <div class="p-2.5 bg-stone-50 rounded-lg border border-stone-200">
+              <span class="text-xs font-bold text-emerald-800">Cadet Kart (6.5 HP)</span>
+              <p class="text-[11px] text-stone-600">Top speed 40 km/h • Ages 10-14 • Ideal for first-time racers</p>
+            </div>
+            <div class="p-2.5 bg-stone-50 rounded-lg border border-stone-200">
+              <span class="text-xs font-bold text-emerald-800">Twin Engine Pro (13 HP)</span>
+              <p class="text-[11px] text-stone-600">Top speed 75 km/h • Adult drivers • Precision hydraulic brakes</p>
+            </div>
+            <div class="p-2.5 bg-stone-50 rounded-lg border border-stone-200">
+              <span class="text-xs font-bold text-emerald-800">Dual Passenger Cruiser</span>
+              <p class="text-[11px] text-stone-600">Tandem racing • Parent + Child or couples drive together</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+          <h3 class="font-serif font-bold text-base text-stone-900 mb-2">🏁 Real-Time Heat Management</h3>
+          <ul class="space-y-3 text-xs text-stone-600">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-stone-800">Max 8 Karts Per Heat:</strong> Guarantees track safety and zero congestion. Racers get clean laps to set personal best lap times.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-stone-800">Mandatory Safety Briefing:</strong> 10-minute digital and pit-crew briefing covers flag protocols, brake zones, and safety harness verification.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-stone-800">Live Transponder Timing:</strong> Lap times are recorded down to the millisecond. Podium winners receive Court Coin bonus multipliers.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-stone-800">Safety Gear Included:</strong> DOT-certified helmets, neck protectors, and sanitised balaclavas provided with every booking confirmation.</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 5 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 6: Food Court -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">POST-MATCH NUTRITION & REFRESHMENTS</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">CourtSide Cafe: Seamless Pre-Ordered Food</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Never wait in line with tired legs. QuickCourt synchronizes your food prep with your match buzzer:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">⏱️</div>
+            <h3 class="font-serif font-bold text-stone-900 text-base mb-1">Timed to Match Finish</h3>
+            <p class="text-xs text-stone-600 leading-relaxed mb-4">Food is prepared 10 minutes before your court session ends. Your smoothies are ice-cold and snacks piping hot when you walk off court.</p>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-lg text-xs italic text-emerald-900 border border-stone-200">
+            Example: 7:00 PM game ends → 7:55 PM smoothies blended and labeled at the pickup counter.
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">🥗</div>
+            <h3 class="font-serif font-bold text-stone-900 text-base mb-1">Athlete-Focused Menu</h3>
+            <p class="text-xs text-stone-600 leading-relaxed mb-4">Carefully curated nutrition designed for post-match recovery: cold-pressed juices, tender coconut water, whey smoothies, and energy bowls.</p>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-lg text-xs italic text-emerald-900 border border-stone-200">
+            Popular: Chilled Tender Coconut Water (₹60), 25g Whey Banana Shake (₹120), Energy Bar (₹50).
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xl mb-3">📱</div>
+            <h3 class="font-serif font-bold text-stone-900 text-base mb-1">1-Tap Digital Pickup</h3>
+            <p class="text-xs text-stone-600 leading-relaxed mb-4">No cash, paper receipts, or counter confusion. Show your booking confirmation badge or tell the barista your court number to collect.</p>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-lg text-xs italic text-emerald-900 border border-stone-200">
+            Zero payment delay: Food is billed on your unified match invoice or paid via Court Coins.
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 6 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 7: Gamified Rewards & Coins -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">PLAYER LOYALTY PROGRAM</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Court Coins & Gamification: Play More, Pay Less</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Unlike traditional platforms with complicated reward points, QuickCourt keeps rewards crystal clear: 1 Coin = ₹1 Rupee.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+          <h3 class="font-serif font-bold text-base text-stone-900 mb-3">🪙 The Simple Math: 1 Coin = ₹1</h3>
+          <ul class="space-y-3 text-xs text-stone-600">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-emerald-800">Earn 10% on Every Game:</strong> Book a ₹600 badminton court → Earn 60 Court Coins in your digital wallet immediately after completion.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-emerald-800">100% Usable at Checkout:</strong> No minimum balance required. Have 40 coins? Get ₹40 off instantly with one click of a slider.</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-emerald-800">Digital Scratch Cards:</strong> Every finished weekend match unlocks a digital scratch card with surprise bonus coins (10 to 100 coins).</div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-700 font-bold">•</span>
+              <div><strong class="text-emerald-800">Transparent Wallet Ledger:</strong> Every coin earned and spent is itemized in your profile wallet so players always trust their balance.</div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-5 shadow-sm">
+          <h3 class="font-serif font-bold text-base text-emerald-950 mb-2">🎉 Real-World Example: Monthly Squad Savings</h3>
+          <p class="text-xs text-stone-600 mb-3">A squad of 4 friends plays football or badminton twice a week:</p>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center p-2 bg-white rounded border border-emerald-100 text-xs">
+              <span class="text-stone-700">Weekly Matches (2 hours)</span>
+              <span class="font-bold text-stone-900">₹1,200 spent</span>
+            </div>
+            <div class="flex justify-between items-center p-2 bg-white rounded border border-emerald-100 text-xs">
+              <span class="text-stone-700">Weekly Coins Earned (10%)</span>
+              <span class="font-bold text-emerald-700">+120 coins (₹120)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 bg-white rounded border border-emerald-100 text-xs">
+              <span class="text-stone-700">Monthly Base Rewards</span>
+              <span class="font-bold text-emerald-700">+480 coins (₹480)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 bg-white rounded border border-emerald-100 text-xs">
+              <span class="text-stone-700">Monthly Scratch Card Bonuses</span>
+              <span class="font-bold text-emerald-700">+120 coins (₹120)</span>
+            </div>
+            <div class="flex justify-between items-center p-2.5 bg-[#173D2B] rounded text-xs text-[#D5E69A] font-bold">
+              <span>Total Free Play Earned</span>
+              <span>₹600 Free Credit!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 7 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 8: Venue Owner Dashboard -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">EMPOWERING VENUE BUSINESSES</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Venue Owner Portal: Ramesh's Turf Made Easy</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">Meet Ramesh — he runs "Apex Turf Arena". Before QuickCourt, he struggled with messy paper registers and double-booking disputes.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-base flex items-center justify-center">🛑</span>
+            <h3 class="font-bold text-stone-900 text-sm">1-Click Slot Blocking</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Heavy rain or net repairs? Ramesh can block any court for specific hours with one tap. Blocked slots appear instantly as unavailable online.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-emerald-800">Business Benefit: Prevents customer disappointment</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-base flex items-center justify-center">📊</span>
+            <h3 class="font-bold text-stone-900 text-sm">Live Occupancy & Income</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Visual breakdown of today's bookings, confirmed slots, walk-in reservations, and net daily revenue without manual math.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-emerald-800">Business Benefit: Clear financial visibility</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-base flex items-center justify-center">🏷️</span>
+            <h3 class="font-bold text-stone-900 text-sm">Custom Peak Pricing</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">Set different rates for morning slots vs peak weekend 7 PM lights. QuickCourt automatically calculates correct rates at checkout.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-emerald-800">Business Benefit: Maximizes arena profitability</span>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-base flex items-center justify-center">⚡</span>
+            <h3 class="font-bold text-stone-900 text-sm">Instant Walk-in Entry</h3>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed">When players walk in from the street, Ramesh can log their cash booking in 5 seconds, immediately locking the slot online.</p>
+          <span class="inline-block mt-2 text-[11px] font-semibold text-emerald-800">Business Benefit: Unified online & offline ledger</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 8 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 9: Reliability, Speed & Testing -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-10 bg-[#F7F3E8] text-[#17271F]">
+      <div>
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">TESTED & PRODUCTION READY</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Rock-Solid Reliability: Built for Performance</h2>
+        <p class="text-xs sm:text-sm text-stone-600 mt-1">We rigorously verified QuickCourt so that every booking, login, and payment calculation executes reliably every time:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-auto">
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm text-center flex flex-col justify-between">
+          <div>
+            <div class="font-serif text-3xl font-extrabold text-[#173D2B]">23 / 23</div>
+            <div class="text-xs font-bold text-stone-800 mt-1">Automated Unit Tests</div>
+            <span class="inline-block px-2 py-0.5 mt-2 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">✓ 100% Pass Rate</span>
+            <p class="text-xs text-stone-600 mt-2 text-left leading-relaxed">Every price calculation, promo code rule, and security validation was tested and passed 100% with automated test suites.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm text-center flex flex-col justify-between">
+          <div>
+            <div class="font-serif text-3xl font-extrabold text-[#173D2B]">19 / 19</div>
+            <div class="text-xs font-bold text-stone-800 mt-1">Browser E2E Tests</div>
+            <span class="inline-block px-2 py-0.5 mt-2 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">✓ Full Journey Verified</span>
+            <p class="text-xs text-stone-600 mt-2 text-left leading-relaxed">Simulated real user actions across Chrome and mobile screens: opening menus, searching venues, picking slots, and booking matches.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm text-center flex flex-col justify-between">
+          <div>
+            <div class="font-serif text-3xl font-extrabold text-[#173D2B]">49 Routes</div>
+            <div class="text-xs font-bold text-stone-800 mt-1">Production Web Pages</div>
+            <span class="inline-block px-2 py-0.5 mt-2 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">✓ Production Compiled</span>
+            <p class="text-xs text-stone-600 mt-2 text-left leading-relaxed">All 49 static and dynamic routes compiled cleanly with 0 errors, ready to support hundreds of concurrent players.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm text-center flex flex-col justify-between">
+          <div>
+            <div class="font-serif text-3xl font-extrabold text-[#173D2B]">&lt; 1 Sec</div>
+            <div class="text-xs font-bold text-stone-800 mt-1">Fast Responsive Loading</div>
+            <span class="inline-block px-2 py-0.5 mt-2 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">✓ Mobile Optimized</span>
+            <p class="text-xs text-stone-600 mt-2 text-left leading-relaxed">Optimized images and lightweight modern code ensure smooth scrolling and instant booking even on slow 4G mobile connections.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-stone-500 border-t border-stone-200 pt-2">
+        <span>QuickCourt Presentation</span>
+        <span>Slide 9 of 10</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 10: Conclusion & Future Vision -->
+    <!-- ========================================== -->
+    <div class="slide w-full h-full flex-col justify-between p-8 sm:p-12 bg-[#173D2B] text-white">
+      <div>
+        <span class="inline-block px-3 py-1 text-xs font-extrabold uppercase tracking-widest bg-[#D5E69A] text-[#173D2B] rounded-full">
+          CONCLUSION & FUTURE
+        </span>
+        <h2 class="font-serif text-3xl sm:text-5xl font-bold text-[#D5E69A] tracking-tight mt-2">
+          The Future of Recreational Sports
+        </h2>
+        <p class="text-xs sm:text-sm text-emerald-200/90 mt-1">QuickCourt transforms fragmented sports turf booking into a unified, delightful consumer experience. Here is what comes next:</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 my-auto">
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 shadow">
+          <div class="text-2xl mb-2">🏆</div>
+          <h3 class="font-serif font-bold text-[#D5E69A] text-sm mb-1">Community Tournaments</h3>
+          <p class="text-xs text-emerald-200 leading-relaxed">Organize weekend badminton & box-cricket leagues with live bracket generation, scoring, and prizes.</p>
+        </div>
+
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 shadow">
+          <div class="text-2xl mb-2">🤝</div>
+          <h3 class="font-serif font-bold text-[#D5E69A] text-sm mb-1">Find-a-Player Matchmaking</h3>
+          <p class="text-xs text-emerald-200 leading-relaxed">Short of a 4th player for doubles badminton? Post an open spot and match with local players of similar skill.</p>
+        </div>
+
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 shadow">
+          <div class="text-2xl mb-2">💡</div>
+          <h3 class="font-serif font-bold text-[#D5E69A] text-sm mb-1">Smart IoT Court Lights</h3>
+          <p class="text-xs text-emerald-200 leading-relaxed">Courts automatically illuminate when your QR code is scanned and turn off when your 60-minute session concludes.</p>
+        </div>
+
+        <div class="bg-[#204D37] border border-emerald-700/60 rounded-xl p-4 shadow">
+          <div class="text-2xl mb-2">📱</div>
+          <h3 class="font-serif font-bold text-[#D5E69A] text-sm mb-1">Split-Pay Among Friends</h3>
+          <p class="text-xs text-emerald-200 leading-relaxed">Split the ₹600 fee 4 ways automatically so each friend pays their ₹150 portion directly within the app.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-emerald-800/80 text-xs text-emerald-300">
+        <span>Thank You  •  Ready for Live Demo & Faculty Q&A</span>
+        <span>QuickCourt • Season 2026</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive Slide Controls Script (NO shortcut key traps, pure buttons) -->
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const slideIndicator = document.getElementById('slideIndicator');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      slideIndicator.textContent = `${currentSlide + 1} / ${totalSlides}`;
+      prevBtn.disabled = currentSlide === 0;
+      nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    });
+
+    // Simple arrow keys navigation only (no notes or shortcut drawers)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        if (currentSlide < totalSlides - 1) {
+          currentSlide++;
+          updateSlide();
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        if (currentSlide > 0) {
+          currentSlide--;
+          updateSlide();
+        }
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

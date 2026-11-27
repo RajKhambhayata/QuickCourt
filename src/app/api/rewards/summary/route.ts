@@ -16,7 +16,7 @@ export async function GET() {
     const now = new Date();
 
     // Parallelize all independent queries
-    const [wallet, streak, existingWelcome, activeCoupons, completedBookingsCount, unplayedTokensCount, ledger] = await Promise.all([
+    const [wallet, streak, existingWelcome, activeCoupons, completedBookingsCount, unplayedTokensCount, ledger, dailyClaim] = await Promise.all([
       // 1. Get or create Wallet
       prisma.wallet.findUnique({
         where: { userId: user.id },
@@ -64,6 +64,11 @@ export async function GET() {
         where: { userId: user.id },
         orderBy: { createdAt: 'desc' },
         take: 10,
+      }),
+      prisma.gameSession.findFirst({
+        where: { userId: user.id, gameType: 'DAILY_REWARD', isVerified: true },
+        orderBy: { startedAt: 'desc' },
+        select: { startedAt: true },
       }),
     ]);
 
@@ -142,6 +147,10 @@ export async function GET() {
       gameTokensAvailable: unplayedTokensCount,
       activeCoupons,
       coinLedger: ledger,
+      dailyClaim: {
+        claimed: Boolean(dailyClaim && now.getTime() - dailyClaim.startedAt.getTime() < 24 * 60 * 60 * 1000),
+        nextClaimAt: dailyClaim ? new Date(dailyClaim.startedAt.getTime() + 24 * 60 * 60 * 1000) : null,
+      },
     });
   } catch (error) {
     console.error('Error in /api/rewards/summary:', error);

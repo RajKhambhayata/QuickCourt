@@ -3,187 +3,184 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 255, 255, 255;
+  --paper: #f3eedf;
+  --deep: #e7e0cf;
+  --ink: #17271f;
+  --forest: #173d2b;
+  --moss: #71856a;
+  --lime: #d5e69a;
+  --line: rgba(23, 39, 31, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #f8fafc;
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), 'DM Sans', Arial, sans-serif;
+  min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-poppins), system-ui, sans-serif;
+button, input, select, textarea {
+  font: inherit;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+button {
+  cursor: pointer;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+::selection {
+  background: var(--lime);
+  color: var(--ink);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-  transition: background 0.2s;
+.eyebrow {
+  font-family: var(--font-mono), 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.display {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.04em;
+  font-weight: 600;
 }
 
-/* Glassmorphism utilities */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.rule {
+  border-color: var(--line);
 }
 
-.glass-dark {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Sport-specific gradients */
-.gradient-badminton {
-  background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
-}
-
-.gradient-cricket {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.gradient-tennis {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-}
-
-.gradient-football {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-}
-
-.gradient-basketball {
-  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
-}
-
-/* Animation utilities */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Button effects */
-.btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.btn {
+  background: var(--forest);
+  color: var(--paper);
+  border: 1px solid var(--forest);
   transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
+.btn:hover {
+  background: #28563d;
   transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
 }
 
-.btn-primary:active {
-  transform: translateY(0);
+.quiet {
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
 }
 
-/* Text gradients */
-.text-gradient {
-  background: linear-gradient(135deg, #00e676 0%, #00b359 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.quiet:hover {
+  background: var(--deep);
 }
 
-.text-gradient-warm {
-  background: linear-gradient(135deg, #fe6b00 0%, #ffdbcc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.venue-row {
+  border-top: 1px solid var(--line);
+  transition: background-color 0.2s ease;
 }
 
-/* Kinetic Kineticist Utility Tokens */
-.tnum, [class*="font-data-mono"] {
-  font-feature-settings: "tnum" 1;
-  font-variant-numeric: tabular-nums;
+.venue-row:hover {
+  background: #ebe5d6;
 }
 
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined', system-ui, -apple-system, sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  vertical-align: middle;
+.venue-image {
+  background-size: cover;
+  background-position: center;
 }
 
-.material-symbols-fill {
-  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+.field {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
-.no-scrollbar::-webkit-scrollbar {
+.field:focus {
+  border-color: var(--forest);
+}
+
+.slot {
+  border: 1px solid var(--line);
+  min-height: 40px;
+  font: 11px 'DM Mono', monospace;
+  transition: all 0.15s ease;
+}
+
+.slot:disabled {
+  background: #ded9ca;
+  color: #999284;
+  cursor: not-allowed;
+}
+
+.slot.selected {
+  background: var(--forest);
+  color: var(--paper);
+}
+
+.side-link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  color: #d7dfd0;
+  font-size: 12px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.side-link.active, .side-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-left-color: var(--lime);
+  color: #fff9e8;
+}
+
+.metric {
+  border-top: 2px solid var(--ink);
+  padding-top: 12px;
+}
+
+.mobile-menu {
   display: none;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-menu {
+    display: flex;
+  }
+  .hero-title {
+    font-size: clamp(64px, 16vw, 100px) !important;
+  }
+  .venue-row-inner {
+    grid-template-columns: 105px 1fr !important;
+  }
+  .venue-image {
+    min-height: 110px;
+  }
+  .portal-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .portal-sidebar {
+    display: none !important;
+  }
+  .slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
 }
 
-/* Kinetic Athletic Button Tokens */
-.btn-blaze {
-  background: #fe6b00;
-  color: #ffffff;
-  transition: all 0.15s ease-out;
-}
-.btn-blaze:hover {
-  background: #e05e00;
-}
-.btn-blaze:active {
-  transform: scale(0.98);
-}
-
-.btn-volt {
-  background: #00e676;
-  color: #0b1c30;
-  transition: all 0.15s ease-out;
-}
-.btn-volt:hover {
-  background: #00c864;
-}
-.btn-volt:active {
-  transform: scale(0.98);
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
 }

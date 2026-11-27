@@ -1,41 +1,42 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldAlert, ArrowLeft, Home } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function UnauthorizedPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center space-y-6">
-        <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-10 h-10 text-rose-600" />
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)] flex items-center justify-center p-4">
+      <div className="max-w-md w-full border rule bg-[#f3eedf] p-8 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full border border-[#173d2b] flex items-center justify-center mx-auto text-[#173d2b]">
+          <ShieldAlert size={28} />
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-slate-900">Access Denied</h1>
-          <p className="text-slate-600 text-sm">
-            You don't have permission to access this page. Please log in with the correct account or contact support.
+          <div className="eyebrow text-[#71856a]">Restricted Access</div>
+          <h1 className="display text-3xl font-semibold">Club Desk Notice</h1>
+          <p className="text-xs text-[#687468] leading-relaxed">
+            You do not have credentials for this sector of the club. Please sign in with an authorized account or return to the main grounds.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <button
             onClick={() => router.back()}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
+            className="quiet px-4 py-2.5 text-xs flex items-center justify-center gap-1.5"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Go Back
+            <ArrowLeft size={14} />
+            Go back
           </button>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
+          <Link
+            href="/"
+            className="btn px-4 py-2.5 text-xs flex items-center justify-center gap-1.5"
           >
-            <Home className="w-4 h-4" />
-            Home
-          </button>
+            Return to club grounds <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </div>

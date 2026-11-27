@@ -84,30 +84,21 @@ export async function middleware(request: NextRequest) {
     if (decoded.status) requestHeaders.set('x-user-status', decoded.status);
 
     if (portal && isPublicPortalPage) {
-      // User is signed in and visiting ANY portal's login/signup page.
+      // User is signed in and visiting their CURRENT portal's login/signup page:
       if (decoded.role === portal.role) {
         // Same portal: redirect to their own dashboard.
-        // (Handles: admin hitting /admin/login while already signed in as admin)
         const dest = decoded.role === 'OWNER' && decoded.status === 'PENDING_APPROVAL'
           ? '/owner/pending'
           : portal.dashboard;
         return NextResponse.redirect(new URL(dest, request.url));
-      } else {
-        // Different portal: redirect to THEIR dashboard with a notice param
-        // so the destination page can show "You are already signed in as X".
-        const theirDashboard = dashboardFor(decoded.role);
-        const notice = encodeURIComponent(
-          `You are already signed in as ${decoded.role}. Sign out first to use a different portal.`
-        );
-        const dest = new URL(theirDashboard, request.url);
-        dest.searchParams.set('notice', notice);
-        return NextResponse.redirect(dest);
       }
+      // If visiting a different portal's login/signup page (e.g. USER visiting /owner/login),
+      // allow them to proceed so they can log in with an account matching that portal.
     }
 
     if (portal && !isPublicPortalPage) {
-      // Protected portal page: enforce role match
-      if (decoded.role !== portal.role) {
+      // Protected portal page: enforce role match (ADMIN can access all portals)
+      if (decoded.role !== portal.role && decoded.role !== 'ADMIN') {
         // Wrong role — redirect to unauthorized
         return NextResponse.redirect(new URL('/unauthorized', request.url));
       }

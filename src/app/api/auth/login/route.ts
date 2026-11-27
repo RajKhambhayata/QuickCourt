@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { LoginSchema, LoginService } from '@/modules/auth';
 import { authRateLimiter, getClientIp, checkRateLimit } from '@/lib/rate-limiter';
+import { isDatabaseUnavailable } from '@/lib/database-errors';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,12 @@ export async function POST(request: Request) {
       return rateLimitCheck.response;
     }
 
-    const rawBody = await request.json();
+    let rawBody: any;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Please enter a valid email address and password' }, { status: 400 });
+    }
     const validation = LoginSchema.safeParse(rawBody);
 
     if (!validation.success) {
@@ -47,6 +53,9 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error('Login route error:', error);
+    if (isDatabaseUnavailable(error)) {
+      return NextResponse.json({ error: 'Authentication is temporarily unavailable. Please try again shortly.' }, { status: 503 });
+    }
     return NextResponse.json({ error: 'Internal server error during authentication' }, { status: 500 });
   }
 }

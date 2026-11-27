@@ -12,7 +12,12 @@ export async function POST(request: Request) {
       return rateLimitCheck.response;
     }
 
-    const rawBody = await request.json();
+    let rawBody: any;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Please enter valid registration details' }, { status: 400 });
+    }
     const validation = SignupSchema.safeParse(rawBody);
 
     if (!validation.success) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { revalidateVenues } from '@/lib/cache';
+import { isDatabaseUnavailable } from '@/lib/database-errors';
 import {
   normalizeSportSlug,
   getSportDbSearchTerms,
@@ -190,6 +191,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Fetch venues error:', error);
+    if (isDatabaseUnavailable(error)) {
+      return NextResponse.json({ error: 'Venue service is temporarily unavailable.' }, { status: 503 });
+    }
     return NextResponse.json({ error: 'Failed to fetch venues' }, { status: 500 });
   }
 }
